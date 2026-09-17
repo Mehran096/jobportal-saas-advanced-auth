@@ -4,50 +4,75 @@ export const dynamic = 'force-dynamic';
 import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useGetJobByIdQuery } from "@/lib/redux/api/employerApi";
-import { useApplyForJobMutation, useGetMyApplicationsQuery } from "@/lib/redux/api/jobseekerApi";
+import {
+  useApplyForJobMutation,
+  useGetMyApplicationsQuery,
+  useGetSavedJobsQuery,
+  useSaveJobMutation,
+  useUnsaveJobMutation,
+} from "@/lib/redux/api/jobseekerApi";
 import { useGetProfileQuery } from "@/lib/redux/api/profileApi";
-import { ArrowLeft, Building, MapPin, DollarSign, Calendar, Users, Loader2 } from "lucide-react";
+import { ArrowLeft, Building, MapPin, DollarSign, Calendar, Users, Loader2, Bookmark, BookmarkCheck, FileText } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function JobDetailPage() {
   const router = useRouter();
   const { id } = useParams();
   const jobId = id as string;
 
-  const { data, isLoading, isError } = useGetJobByIdQuery(jobId, { 
-    skip: !jobId,
-    refetchOnMountOrArgChange: true
-  });
-
+  const { data, isLoading, isError } = useGetJobByIdQuery(jobId, { skip:!jobId, refetchOnMountOrArgChange: true });
   const { data: applications, isLoading: appsLoading } = useGetMyApplicationsQuery();
   const { data: profile } = useGetProfileQuery();
+  const { data: savedData } = useGetSavedJobsQuery();
+
   const [applyForJob, { isLoading: isApplying }] = useApplyForJobMutation();
-  const [showCvModal, setShowCvModal] = useState(false);
+  const [saveJob, { isLoading: isSaving }] = useSaveJobMutation();
+  const [unsaveJob, { isLoading: isUnsaving }] = useUnsaveJobMutation();
+
+  const [showNoCvModal, setShowNoCvModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const job = data?.job;
   const applicationCount = data?.applicationCount || 0;
   
   const appliedJobIds = Array.isArray(applications) 
-    ? applications.map((a: { job?: { _id: string } | string }) => 
-        typeof a.job === 'object' ? a.job?._id : a.job
-      ) 
+   ? applications.map((a: { job?: { _id: string } | string }) => typeof a.job === 'object'? a.job?._id : a.job) 
     : [];
-    
   const alreadyApplied = appliedJobIds.includes(jobId);
+  const isSaved = savedData?.savedJobs?.some((j) => j._id === jobId);
 
-  const handleApply = async () => {
-    // CV check first
+  const handleApplyClick = () => {
     if (!profile?.resumeUrl) {
-      setShowCvModal(true);
-      return;
+      setShowNoCvModal(true);
+    } else {
+      setShowConfirmModal(true);
     }
+  };
 
+  const confirmApply = async () => {
     try {
+      setShowConfirmModal(false);
       await applyForJob(jobId).unwrap();
+      toast.success("Applied successfully!");
     } catch (err: unknown) {
       const error = err as { data?: { message?: string } };
       if (!error?.data?.message?.includes("Already applied")) {
-        alert(error?.data?.message || "Failed to apply");
+        toast.error(error?.data?.message || "Failed to apply");
       }
+    }
+  };
+
+  const handleToggleSave = async () => {
+    try {
+      if (isSaved) {
+        await unsaveJob(jobId).unwrap();
+        toast.success("Removed from saved");
+      } else {
+        await saveJob(jobId).unwrap();
+        toast.success("Job saved!");
+      }
+    } catch {
+      toast.error("Failed");
     }
   };
 
@@ -55,7 +80,7 @@ export default function JobDetailPage() {
     return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={32} /></div>
   }
 
-  if (isError || !job) {
+  if (isError ||!job) {
     return (
       <div className="max-w-4xl mx-auto p-6 text-center">
         <h2 className="text-2xl font-bold mb-4">Job not found</h2>
@@ -76,7 +101,13 @@ export default function JobDetailPage() {
 
         <div className="bg-white rounded-xl shadow-sm border p-6 mb-6">
           <div className="flex-1">
-            <h2 className="text-3xl font-bold text-gray-900 mb-3">{job.title}</h2>
+            <div className="flex items-start justify-between gap-4">
+              <h2 className="text-3xl font-bold text-gray-900 mb-3 flex-1">{job.title}</h2>
+              <button onClick={handleToggleSave} disabled={isSaving || isUnsaving}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium border transition ${isSaved? "bg-purple-50 border-purple-200 text-purple-700" : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"}`}>
+                {isSaved? <BookmarkCheck size={18} /> : <Bookmark size={18} />} {isSaved? "Saved" : "Save"}
+              </button>
+            </div>
             <div className="flex flex-wrap gap-x-5 gap-y-2 text-gray-600 mb-4">
               <div className="flex items-center gap-2"><Building size={16} className="text-gray-400" /> {job.company}</div>
               <div className="flex items-center gap-2"><MapPin size={16} className="text-gray-400" /> {job.location}</div>
@@ -88,53 +119,56 @@ export default function JobDetailPage() {
 
           <div className="border-t pt-5 mt-5">
             <h3 className="font-semibold text-lg mb-3 text-gray-900">Job Description</h3>
-            <p className="text-gray-700 leading-relaxed whitespace-pre-line wrap-break-words overflow-hidden">{job.description}</p>
+            <p className="text-gray-700 leading-relaxed wrap-break-word overflow-hidden whitespace-pre-line">{job.description}</p>
           </div>
 
           <div className="border-t pt-5 mt-5">
-            <button 
-              onClick={handleApply}
-              disabled={alreadyApplied || isApplying}
-              className={`w-full py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2 ${
-                alreadyApplied
-                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700 text-white"
-              }`}
-            >
+            <button onClick={handleApplyClick} disabled={alreadyApplied || isApplying}
+              className={`w-full py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2 ${alreadyApplied? "bg-gray-200 text-gray-500 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 text-white"}`}>
               {isApplying && <Loader2 size={18} className="animate-spin" />}
-              {alreadyApplied ? "✓ Applied" : isApplying ? "Applying..." : "Apply Now"}
+              {alreadyApplied? "✓ Applied" : isApplying? "Applying..." : "Apply Now"}
             </button>
-            {alreadyApplied && (
-              <p className="text-center text-sm text-green-600 mt-2">Your CV and profile were sent to employer</p>
-            )}
+            {alreadyApplied && <p className="text-center text-sm text-green-600 mt-2">Your CV and profile were sent to employer</p>}
           </div>
         </div>
       </div>
 
-      {/* CV Required Modal with Cancel */}
-      {showCvModal && (
+      {/* MODAL 1: NO CV */}
+      {showNoCvModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6">
             <h3 className="text-lg font-semibold text-gray-900">CV Required</h3>
-            <p className="text-gray-600 mt-2 text-sm">
-              Please upload your CV in Profile first to apply for jobs.
-            </p>
+            <p className="text-gray-600 mt-2 text-sm">Please upload your CV in Profile first to apply for jobs.</p>
             <div className="flex justify-end gap-3 mt-6">
-              <button
-                onClick={() => setShowCvModal(false)}
-                className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  setShowCvModal(false);
-                  router.push(`/dashboard/profile?redirect=/dashboard/jobs/${jobId}`);
-                }}
-                className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-sm font-medium"
-              >
-                Go to Profile
-              </button>
+              <button onClick={() => setShowNoCvModal(false)} className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm font-medium">Cancel</button>
+              <button onClick={() => { setShowNoCvModal(false); router.push(`/dashboard/profile?redirect=/dashboard/jobs/${jobId}`); }} className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-sm font-medium">Go to Profile</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: HAS CV - CONFIRM */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold text-gray-900">Ready to Apply?</h3>
+            <p className="text-gray-600 mt-2 text-sm">Your CV is ready for this job. Review before sending.</p>
+            
+            <div className="mt-4 bg-gray-50 border rounded-lg p-3 flex items-center gap-3">
+              <div className="p-2 bg-blue-100 text-blue-600 rounded-lg"><FileText size={20} /></div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">{(profile as any)?.resumeOriginalName || "My_CV.pdf"}</p>
+                <a href={profile?.resumeUrl} target="_blank" className="text-xs text-blue-600 hover:underline">View CV</a>
+              </div>
+              <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">Ready</span>
+            </div>
+
+            <div className="flex justify-between gap-3 mt-6">
+              <button onClick={() => setShowConfirmModal(false)} className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm font-medium">Cancel</button>
+              <div className="flex gap-2">
+                <button onClick={() => { setShowConfirmModal(false); router.push(`/dashboard/profile?redirect=/dashboard/jobs/${jobId}`); }} className="px-4 py-2 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 text-sm font-medium">Edit CV</button>
+                <button onClick={confirmApply} className="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-sm font-medium">Confirm & Apply</button>
+              </div>
             </div>
           </div>
         </div>
