@@ -68,17 +68,17 @@ export async function POST(req: NextRequest) {
 }
 
 // Optional: GET for jobseeker's own applications
-export async function GET(req: NextRequest) {
-  try {
-    await dbConnect();
-    const userToken = await verifyToken(req);
+// export async function GET(req: NextRequest) {
+//   try {
+//     await dbConnect();
+//     const userToken = await verifyToken(req);
     
-    const apps = await Application.find({ applicant: userToken.id })
-      .populate("job", "title company location")
-      .sort({ createdAt: -1 });
+//     const apps = await Application.find({ applicant: userToken.id })
+//       .populate("job", "title company location")
+//       .sort({ createdAt: -1 });
 
-    return NextResponse.json(apps);
-  } catch (error) {
-    return NextResponse.json({ message: "Server error" }, { status: 500 });
-  }
-}
+//     return NextResponse.json(apps);
+//   } catch (error) {
+//     return NextResponse.json({ message: "Server error" }, { status: 500 });
+//   }
+// }

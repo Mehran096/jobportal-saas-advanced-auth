@@ -23,6 +23,7 @@ export const profileApi = baseApi.injectEndpoints({
     getProfile: builder.query<IProfile, void>({
       query: () => "/user/profile",
       providesTags: ["Profile"],
+      keepUnusedDataFor: 0,
     }),
 
     updateProfile: builder.mutation<IProfile, Partial<IProfile>>({

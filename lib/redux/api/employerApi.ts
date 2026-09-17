@@ -113,15 +113,15 @@ export const employerApi = baseApi.injectEndpoints({
       providesTags: ["Applications"],
     }),
 
-     getEmployerApplicants: builder.query<{ applications: Application[] }, void>({
-      query: () => "/employer/applicants",
-      providesTags: ["Applications"],
-    }),
+//      getEmployerApplicants: builder.query<{ applications: Application[] }, void>({
+//       query: () => "/employer/applicants",
+//       providesTags: ["Applications"],
+//     }),
 
-    getApplicants: builder.query<{ applications: Application[] }, void>({
-  query: () => "/employer/applicants",
-  providesTags: ["Applications"],
-}),
+//     getApplicants: builder.query<{ applications: Application[] }, void>({
+//   query: () => "/employer/applicants",
+//   providesTags: ["Applications"],
+// }),
 
     // 8. Update Application Status
     updateApplicationStatus: builder.mutation<{ message: string; application: Application }, { id: string; status: "pending" | "reviewed" | "shortlisted" | "accepted" | "rejected" }>({
@@ -149,8 +149,8 @@ export const {
   useDeleteJobMutation,
   useGetApplicationsByJobQuery,
   useGetAllApplicationsQuery,
-  useGetEmployerApplicantsQuery,
-  useGetApplicantsQuery,
+  // useGetEmployerApplicantsQuery,
+  // useGetApplicantsQuery,
   useUpdateApplicationStatusMutation,
   useGetEmployerStatsQuery
 } = employerApi;

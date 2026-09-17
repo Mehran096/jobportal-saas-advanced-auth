@@ -1,9 +1,11 @@
 "use client";
 export const dynamic = 'force-dynamic';
 
+import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useGetJobByIdQuery } from "@/lib/redux/api/employerApi";
 import { useApplyForJobMutation, useGetMyApplicationsQuery } from "@/lib/redux/api/jobseekerApi";
+import { useGetProfileQuery } from "@/lib/redux/api/profileApi";
 import { ArrowLeft, Building, MapPin, DollarSign, Calendar, Users, Loader2 } from "lucide-react";
 
 export default function JobDetailPage() {
@@ -17,24 +19,35 @@ export default function JobDetailPage() {
   });
 
   const { data: applications, isLoading: appsLoading } = useGetMyApplicationsQuery();
+  const { data: profile } = useGetProfileQuery();
   const [applyForJob, { isLoading: isApplying }] = useApplyForJobMutation();
+  const [showCvModal, setShowCvModal] = useState(false);
 
   const job = data?.job;
   const applicationCount = data?.applicationCount || 0;
   
-  // FIXED: applications is now a direct array (not { applications: [] })
   const appliedJobIds = Array.isArray(applications) 
-    ? applications.map((a: any) => a.job?._id || a.job) 
+    ? applications.map((a: { job?: { _id: string } | string }) => 
+        typeof a.job === 'object' ? a.job?._id : a.job
+      ) 
     : [];
     
   const alreadyApplied = appliedJobIds.includes(jobId);
 
   const handleApply = async () => {
+    // CV check first
+    if (!profile?.resumeUrl) {
+      setShowCvModal(true);
+      return;
+    }
+
     try {
       await applyForJob(jobId).unwrap();
-      alert("Applied successfully! Employer can now see your CV + Bio.");
-    } catch (err: any) {
-      alert(err?.data?.message || "You have already applied to this job");
+    } catch (err: unknown) {
+      const error = err as { data?: { message?: string } };
+      if (!error?.data?.message?.includes("Already applied")) {
+        alert(error?.data?.message || "Failed to apply");
+      }
     }
   };
 
@@ -71,12 +84,6 @@ export default function JobDetailPage() {
               <div className="flex items-center gap-2"><Calendar size={16} className="text-gray-400" /> Posted {new Date(job.createdAt).toLocaleDateString()}</div>
               <div className="flex items-center gap-2"><Users size={16} className="text-gray-400" /> {applicationCount} Applicants</div>
             </div>
-
-            {job.postedBy && (
-              <p className="text-sm text-gray-500 border-t pt-3">
-                Posted by: <span className="font-semibold">{job.postedBy.firstName} {job.postedBy.lastName}</span>
-              </p>
-            )}
           </div>
 
           <div className="border-t pt-5 mt-5">
@@ -103,6 +110,35 @@ export default function JobDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* CV Required Modal with Cancel */}
+      {showCvModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6">
+            <h3 className="text-lg font-semibold text-gray-900">CV Required</h3>
+            <p className="text-gray-600 mt-2 text-sm">
+              Please upload your CV in Profile first to apply for jobs.
+            </p>
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setShowCvModal(false)}
+                className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowCvModal(false);
+                  router.push(`/dashboard/profile?redirect=/dashboard/jobs/${jobId}`);
+                }}
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-sm font-medium"
+              >
+                Go to Profile
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

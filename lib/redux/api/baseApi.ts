@@ -1,31 +1,28 @@
 // lib/redux/api/baseApi.ts
-import { createApi, fetchBaseQuery, BaseQueryFn } from '@reduxjs/toolkit/query/react';
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 
-const baseQuery = fetchBaseQuery({
+const rawBaseQuery = fetchBaseQuery({
   baseUrl: '/api',
-  credentials: 'include', // <-- THIS IS THE KEY: sends next-auth cookie
+  credentials: 'include',
 });
 
-const baseQueryWithReauth: BaseQueryFn = async (args, api, extraOptions) => {
-  const result = await baseQuery(args, api, extraOptions);
-  
-  // 401 = session expired / not logged in
-  if (result.error?.status === 401) {
-    if (typeof window !== 'undefined') {
-      // No more localStorage.removeItem("token")
-      api.dispatch(baseApi.util.resetApiState()); // clear RTK cache
-      // Don't force window.location here - let the component handle it
-      // If you want auto redirect, uncomment:
-      // window.location.href = '/login';
-    }
-  }
-  
+const baseQueryWithReauth: BaseQueryFn<
+  string | FetchArgs,
+  unknown,
+  FetchBaseQueryError
+> = async (args, api, extraOptions) => {
+  const result = await rawBaseQuery(args, api, extraOptions);
+
+  // just return, don't dispatch here to avoid circular dep + any
+  // 401 handling will be done in DashboardHeader logout
   return result;
 };
 
 export const baseApi = createApi({
   reducerPath: 'baseApi',
   baseQuery: baseQueryWithReauth,
+  keepUnusedDataFor: 0,
   tagTypes: ["Jobs", "Applications", "Notifications", "JobSeeker", "Employer", "Auth", "Profile"],
   endpoints: () => ({}),
 });

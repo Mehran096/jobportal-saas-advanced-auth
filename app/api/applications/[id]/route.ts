@@ -29,6 +29,8 @@ interface Snapshot {
 
 type ValidStatus = "pending" | "reviewed" | "shortlisted" | "accepted" | "rejected";
 
+const FINAL_STATUSES: ValidStatus[] = ["accepted", "rejected", "shortlisted"];
+
 export async function PATCH(req: NextRequest, { params }: Params) {
   try {
     await dbConnect();
@@ -66,10 +68,26 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       return NextResponse.json({ message: "Forbidden: Not your job" }, { status: 403 });
     }
 
+    // 1. BLOCK if already in final status
+    if (FINAL_STATUSES.includes(application.status as ValidStatus)) {
+      return NextResponse.json(
+        { message: `Already ${application.status}. Cannot change status again.` },
+        { status: 400 }
+      );
+    }
+
+    // 2. BLOCK if same status again
+    if (application.status === status) {
+      return NextResponse.json(
+        { message: `Already ${status}` },
+        { status: 400 }
+      );
+    }
+
     application.status = status;
     await application.save();
 
-    if (["accepted", "rejected", "shortlisted"].includes(status)) {
+    if (FINAL_STATUSES.includes(status)) {
       const applicant = application.applicant as unknown as PopulatedApplicant | null;
       const snapshot = (application as unknown as { snapshot?: Snapshot }).snapshot ?? {};
 
