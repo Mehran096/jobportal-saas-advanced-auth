@@ -4,7 +4,7 @@ export interface IApplication extends Document {
   job: mongoose.Types.ObjectId;
   applicant: mongoose.Types.ObjectId;
   employer: mongoose.Types.ObjectId;
-  status: "pending" | "reviewed" | "shortlisted" | "accepted" | "rejected";
+  status: "pending" | "shortlisted" | "accepted" | "rejected";
   resumeUrl?: string;
   snapshot: {
     firstName: string;
@@ -31,32 +31,35 @@ const ApplicationSchema: Schema = new Schema(
 
     status: {
       type: String,
-      enum: ["pending", "reviewed", "shortlisted", "accepted", "rejected"],
+      enum: ["pending", "shortlisted", "accepted", "rejected"], // removed reviewed
       default: "pending",
+      index: true,
     },
 
-    resumeUrl: { type: String }, // keep for backwards compatibility
+    resumeUrl: { type: String }, // backwards compat
 
-    // This is what employer will see - FULL bio data + CV at time of apply
+    // This is taken from Profile at apply time - employer sees this forever
     snapshot: {
-      firstName: { type: String },
-      lastName: { type: String },
-      headline: { type: String },
-      bio: { type: String },
-      phone: { type: String },
-      location: { type: String },
-      profileImage: { type: String },
-      resumeUrl: { type: String },
-      resumeName: { type: String },
+      firstName: String,
+      lastName: String,
+      headline: String,
+      bio: String,
+      phone: String,
+      location: String,
+      profileImage: String,
+      resumeUrl: String,
+      resumeName: String,
       skills: { type: [String], default: [] },
-      email: { type: String },
+      email: String,
     },
   },
   { timestamps: true }
 );
 
-// Ek user ek job pe 1 hi baar apply kar sake
+// 1 user can apply 1 time to 1 job
 ApplicationSchema.index({ job: 1, applicant: 1 }, { unique: true });
+ApplicationSchema.index({ employer: 1, status: 1 });
+ApplicationSchema.index({ applicant: 1, status: 1 });
 
 export default mongoose.models.Application ||
   mongoose.model<IApplication>("Application", ApplicationSchema);

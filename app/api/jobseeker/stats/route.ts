@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import dbConnect from "@/lib/db";
 import Application from "@/models/Application";
+import SavedJob from "@/models/SavedJob";
 import { verifyToken } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
@@ -12,17 +13,14 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ message: "Only jobseekers can access" }, { status: 403 });
     }
 
-    const jobseekerId = user.id;
-
-    // 1. Total Applications
-    const totalApplications = await Application.countDocuments({ applicant: jobseekerId });
-
-    // 2. Interviews = accepted status
-    const interviews = await Application.countDocuments({ applicant: jobseekerId, status: "accepted" });
-
-    // 3. Saved Jobs - agar tumne save job ka model banaya hai to yahan count karo
-    // filhal 0 rakhte hain
-    const savedJobs = 0; 
+    const [totalApplications, interviews, savedJobs] = await Promise.all([
+      Application.countDocuments({ applicant: user.id }),
+      Application.countDocuments({ 
+        applicant: user.id, 
+        status: { $in: ["accepted", "shortlisted"] } 
+      }),
+      SavedJob.countDocuments({ user: user.id })
+    ]);
 
     return NextResponse.json({
       totalApplications,

@@ -29,7 +29,7 @@ export interface Application {
   job: Job;
   applicant?: string;
   employer?: string;
-  status: "pending" | "reviewed" | "shortlisted" | "accepted" | "rejected";
+  status: "pending" | "shortlisted" | "accepted" | "rejected";
   resumeUrl?: string;
   snapshot: ApplicationSnapshot;
   createdAt: string;
@@ -41,39 +41,62 @@ export interface JobseekerStats {
   savedJobs: number;
 }
 
+type ApplicationsResponse = Application[] | { applications: Application[] };
+
 export const jobseekerApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getAllJobs: builder.query<{ jobs: Job[] }, { search?: string; location?: string } | void>({
+    getAllJobs: builder.query<{ jobs: Job[]; count?: number }, { search?: string; location?: string } | void>({
       query: (params) => ({
         url: "/jobs",
-        params,
+        params: params ?? {},
       }),
       providesTags: ["Jobs"],
     }),
 
-    // FIXED: matches your backend app/api/application/route.ts
     applyForJob: builder.mutation<{ message: string; application: Application }, string>({
       query: (jobId) => ({
-         url: `/jobs/${jobId}/apply`,
+        url: `/jobs/${jobId}/apply`,
         method: "POST",
         body: { job: jobId },
       }),
       invalidatesTags: ["Applications", "JobSeeker"],
     }),
 
-    // FIXED: GET /api/application (not /applications/my-applications)
-    getMyApplications: builder.query<Application[] | { applications: Application[] }, void>({
+    getMyApplications: builder.query<Application[], void>({
       query: () => "/applications/my-applications",
       providesTags: ["Applications"],
-      // normalize both array or object responses
-      transformResponse: (response: any) => {
-        return Array.isArray(response) ? response : response.applications || [];
-      }
+      transformResponse: (response: ApplicationsResponse) => {
+        if (Array.isArray(response)) return response;
+        return response.applications ?? [];
+      },
     }),
 
     getJobseekerStats: builder.query<JobseekerStats, void>({
       query: () => "/jobseeker/stats",
       providesTags: ["JobSeeker"],
+    }),
+
+    // --- NEW SAVED JOBS ---
+    getSavedJobs: builder.query<{ savedJobs: Job[] }, void>({
+      query: () => "/saved-jobs",
+      providesTags: ["SavedJobs"],
+    }),
+
+    saveJob: builder.mutation<{ message: string }, string>({
+      query: (jobId) => ({
+        url: "/saved-jobs",
+        method: "POST",
+        body: { jobId },
+      }),
+      invalidatesTags: ["SavedJobs", "JobSeeker"],
+    }),
+
+    unsaveJob: builder.mutation<{ message: string }, string>({
+      query: (jobId) => ({
+        url: `/saved-jobs/${jobId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["SavedJobs", "JobSeeker"],
     }),
   }),
 });
@@ -83,4 +106,7 @@ export const {
   useApplyForJobMutation,
   useGetMyApplicationsQuery,
   useGetJobseekerStatsQuery,
+  useGetSavedJobsQuery,
+  useSaveJobMutation,
+  useUnsaveJobMutation,
 } = jobseekerApi;

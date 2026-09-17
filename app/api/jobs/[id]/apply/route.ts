@@ -3,6 +3,7 @@ import dbConnect from "@/lib/db";
 import Application from "@/models/Application";
 import Job from "@/models/Job";
 import User from "@/models/User";
+import Profile from "@/models/Profile";
 import { verifyToken } from "@/lib/auth";
 import mongoose from "mongoose";
 
@@ -16,69 +17,59 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { job } = body;
+    const { job } = body as { job?: string };
 
     if (!job || !mongoose.Types.ObjectId.isValid(job)) {
       return NextResponse.json({ message: "Valid Job ID is required" }, { status: 400 });
     }
 
-    // Get full user profile + job
-    const applicant = await User.findById(userToken.id);
-    const jobDoc = await Job.findById(job);
+    // Get user, profile, and job in parallel
+    const [user, profile, jobDoc] = await Promise.all([
+      User.findById(userToken.id),
+      Profile.findOne({ user: userToken.id }),
+      Job.findById(job),
+    ]);
 
-    if (!applicant || !jobDoc) {
+    if (!user || !jobDoc) {
       return NextResponse.json({ message: "User or Job not found" }, { status: 404 });
     }
 
-    if (!applicant.resumeUrl) {
+    if (!profile || !profile.resumeUrl) {
       return NextResponse.json({ message: "Please upload your CV in Profile first" }, { status: 400 });
     }
 
-    // Create with SNAPSHOT - this is what employer sees
     const application = await Application.create({
       job: jobDoc._id,
-      applicant: applicant._id,
-      employer: jobDoc.postedBy, // Job model me postedBy hona chahiye
-      resumeUrl: applicant.resumeUrl, // backwards compatibility
+      applicant: user._id,
+      employer: jobDoc.postedBy,
+      resumeUrl: profile.resumeUrl,
       snapshot: {
-        firstName: applicant.firstName,
-        lastName: applicant.lastName,
-        headline: applicant.headline,
-        bio: applicant.bio,
-        phone: applicant.phone,
-        location: applicant.location,
-        profileImage: applicant.profileImage,
-        resumeUrl: applicant.resumeUrl,
-        resumeName: applicant.resumeName,
-        skills: applicant.skills,
-        email: applicant.email,
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        headline: profile.headline,
+        bio: profile.bio,
+        phone: profile.phone,
+        location: profile.location,
+        profileImage: profile.profileImage,
+        resumeUrl: profile.resumeUrl,
+        resumeName: profile.resumeName,
+        skills: profile.skills,
+        email: user.email,
       },
     });
 
     return NextResponse.json({ message: "Applied successfully", application }, { status: 201 });
 
   } catch (error: unknown) {
-    if (error instanceof Error && 'code' in error && (error as any).code === 11000) {
-      return NextResponse.json({ message: "You already applied to this job" }, { status: 400 });
+    // duplicate key = already applied
+    if (error instanceof Error) {
+      const mongoError = error as Error & { code?: number };
+      if (mongoError.code === 11000) {
+        return NextResponse.json({ message: "You already applied to this job" }, { status: 400 });
+      }
+      console.error("APPLY ERROR:", error);
+      return NextResponse.json({ message: error.message }, { status: 500 });
     }
-    const message = error instanceof Error ? error.message : "Server error";
-    console.error("APPLY ERROR:", error);
-    return NextResponse.json({ message }, { status: 500 });
+    return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 }
-
-// Optional: GET for jobseeker's own applications
-// export async function GET(req: NextRequest) {
-//   try {
-//     await dbConnect();
-//     const userToken = await verifyToken(req);
-    
-//     const apps = await Application.find({ applicant: userToken.id })
-//       .populate("job", "title company location")
-//       .sort({ createdAt: -1 });
-
-//     return NextResponse.json(apps);
-//   } catch (error) {
-//     return NextResponse.json({ message: "Server error" }, { status: 500 });
-//   }
-// }

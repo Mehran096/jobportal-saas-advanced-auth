@@ -31,7 +31,7 @@ interface Application {
   _id: string;
   job: { _id: string; title: string; company?: string; location?: string };
   applicant: Applicant;
-  status: "pending" | "reviewed" | "shortlisted" | "accepted" | "rejected";
+  status: "pending" | "shortlisted" | "accepted" | "rejected";
   resumeUrl?: string;
   snapshot?: {
     firstName: string;
@@ -113,18 +113,10 @@ export const employerApi = baseApi.injectEndpoints({
       providesTags: ["Applications"],
     }),
 
-//      getEmployerApplicants: builder.query<{ applications: Application[] }, void>({
-//       query: () => "/employer/applicants",
-//       providesTags: ["Applications"],
-//     }),
-
-//     getApplicants: builder.query<{ applications: Application[] }, void>({
-//   query: () => "/employer/applicants",
-//   providesTags: ["Applications"],
-// }),
+ 
 
     // 8. Update Application Status
-    updateApplicationStatus: builder.mutation<{ message: string; application: Application }, { id: string; status: "pending" | "reviewed" | "shortlisted" | "accepted" | "rejected" }>({
+    updateApplicationStatus: builder.mutation<{ message: string; application: Application }, { id: string; status: "pending" | "shortlisted" | "accepted" | "rejected" }>({
       query: ({ id, status }) => ({ 
         url: `/applications/${id}`, 
         method: "PATCH",
@@ -149,8 +141,7 @@ export const {
   useDeleteJobMutation,
   useGetApplicationsByJobQuery,
   useGetAllApplicationsQuery,
-  // useGetEmployerApplicantsQuery,
-  // useGetApplicantsQuery,
+  
   useUpdateApplicationStatusMutation,
   useGetEmployerStatsQuery
 } = employerApi;

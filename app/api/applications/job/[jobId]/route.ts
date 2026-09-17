@@ -11,18 +11,13 @@ export async function GET(req: NextRequest, { params }: Params) {
     await dbConnect();
     const { jobId } = await params;
     
-    let user;
-    try {
-      user = await verifyToken(req);
-    } catch {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
+    const user = await verifyToken(req);
 
     if (user.role !== "employer") {
       return NextResponse.json({ message: "Only employers can view" }, { status: 403 });
     }
 
-    const job = await Job.findById(jobId);
+    const job = await Job.findById(jobId).select("postedBy");
     if (!job) {
       return NextResponse.json({ message: "Job not found" }, { status: 404 });
     }
@@ -31,11 +26,8 @@ export async function GET(req: NextRequest, { params }: Params) {
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
-    // FIXED: Return whole profile + CV
     const applications = await Application.find({ job: jobId })
-      .populate("applicant", "firstName lastName email")
-      .populate("job", "title company location")
-      .select("+snapshot +resumeUrl") // ensure snapshot is returned if you have select:false in schema
+      .populate("job", "title company location type")
       .sort({ createdAt: -1 })
       .lean();
 

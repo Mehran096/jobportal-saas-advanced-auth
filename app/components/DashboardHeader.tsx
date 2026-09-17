@@ -5,12 +5,14 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { useDispatch } from "react-redux";
 import NotificationBell from "@/app/components/NotificationBell";
-import { Briefcase } from "lucide-react";
+import { Briefcase, Bookmark } from "lucide-react";
 import { baseApi } from "@/lib/redux/api/baseApi";
+import { useGetSavedJobsQuery } from "@/lib/redux/api/jobseekerApi";
 
 const navLinks = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/dashboard/jobs", label: "Find Jobs", role: "jobseeker" },
+  { href: "/dashboard/saved", label: "Saved Jobs", role: "jobseeker" },
   { href: "/dashboard/applications", label: "My Applications", role: "jobseeker" },
   { href: "/dashboard/profile", label: "My Profile", role: "jobseeker" },
   { href: "/dashboard/employer/jobs", label: "My Jobs", role: "employer" },
@@ -26,10 +28,13 @@ export default function DashboardHeader() {
   const fullName = user?.name || "User";
   const role = (user as { role?: string })?.role;
 
+  const { data: savedData } = useGetSavedJobsQuery(undefined, {
+    skip: role!== "jobseeker",
+  });
+  const savedCount = savedData?.savedJobs?.length || 0;
+
   const handleLogout = async () => {
-    // 1 line clears ALL caches (profile, employer, jobseeker, jobs...)
     dispatch(baseApi.util.resetApiState());
-    // 2. hard redirect with next-auth
     await signOut({ callbackUrl: "/login" });
   };
 
@@ -45,18 +50,25 @@ export default function DashboardHeader() {
           </Link>
           <nav className="hidden md:flex gap-4">
             {navLinks
-              .filter((link) => !link.role || link.role === role)
-              .map((link) => {
-                const isActive = pathname === link.href;
+             .filter((link) =>!link.role || link.role === role)
+             .map((link) => {
+                const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
+                const isSaved = link.href === "/dashboard/saved";
                 return (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`font-medium transition ${
-                      isActive ? "text-blue-600" : "text-gray-600 hover:text-blue-600"
+                    className={`font-medium transition flex items-center gap-1.5 ${
+                      isActive? "text-blue-600" : "text-gray-600 hover:text-blue-600"
                     }`}
                   >
+                    {isSaved && <Bookmark size={16} />}
                     {link.label}
+                    {isSaved && savedCount > 0 && (
+                      <span className="bg-blue-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center leading-none">
+                        {savedCount}
+                      </span>
+                    )}
                   </Link>
                 );
               })}

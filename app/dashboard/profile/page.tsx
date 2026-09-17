@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams  } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useGetProfileQuery, useUpdateProfileMutation } from "@/lib/redux/api/profileApi";
 import { UploadButton } from "@/lib/utils/uploadthing";
 import DashboardHeader from "@/app/components/DashboardHeader";
@@ -9,10 +9,10 @@ import { Loader2, Save, FileText, User, MapPin, Phone, Briefcase, X, Sparkles } 
 import Image from "next/image";
 import toast from "react-hot-toast";
 
-export default function ProfilePage() {
+function ProfileForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-const redirectUrl = searchParams.get("redirect");
+  const redirectUrl = searchParams.get("redirect");
   const { data: profile, isLoading } = useGetProfileQuery();
   const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation();
 
@@ -21,11 +21,9 @@ const redirectUrl = searchParams.get("redirect");
     profileImage: "", resumeUrl: "", resumeName: "", skills: [] as string[]
   });
   const [skillInput, setSkillInput] = useState("");
-   
 
   useEffect(() => {
     if (profile) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm({
         firstName: profile.firstName || "",
         lastName: profile.lastName || "",
@@ -38,27 +36,24 @@ const redirectUrl = searchParams.get("redirect");
         resumeName: profile.resumeName || "",
         skills: profile.skills || [],
       });
-       
     }
   }, [profile]);
 
   const handleSave = async () => {
-  try {
-    await updateProfile(form).unwrap();
-    toast.success("Profile saved successfully! Redirecting...");
-
-    setTimeout(() => {
-      if (redirectUrl) {
-        router.push(redirectUrl); // back to exact job e.g. /dashboard/jobs/6aaa66fd...
-      } else {
-        router.push("/dashboard/jobs");
-      }
-    }, 800);
-
-  } catch {
-    toast.error("Failed to save ❌");
-  }
-};
+    if (!form.firstName ||!form.lastName) {
+      toast.error("First & Last name required");
+      return;
+    }
+    try {
+      await updateProfile(form).unwrap();
+      toast.success("Profile saved!");
+      setTimeout(() => {
+        router.push(redirectUrl || "/dashboard/jobs");
+      }, 600);
+    } catch {
+      toast.error("Failed to save ❌");
+    }
+  };
 
   const addSkill = () => {
     const s = skillInput.trim();
@@ -102,7 +97,7 @@ const redirectUrl = searchParams.get("redirect");
                     <a href={form.resumeUrl} download className="text-xs text-green-700 underline">Download</a>
                   </div>
                 </div>
-              ) : <div className="border border-dashed rounded-xl p-4 text-center mb-4"><p className="text-sm text-gray-500">No CV uploaded yet</p></div>}
+              ) : <div className="border border-dashed rounded-xl p-4 text-center mb-4"><p className="text-sm text-gray-500">No CV uploaded yet — required to apply</p></div>}
               <div className="mt-3 ut-wrapper">
                 <UploadButton endpoint="resume" onClientUploadComplete={(res) => { if (res?.[0]) setForm({...form, resumeUrl: res[0].ufsUrl, resumeName: res[0].name }); }} appearance={{ container: "w-full!flex!flex-col items-center", button: "w-full bg-gray-900 hover:bg-black text-white text-sm font-medium py-2.5 rounded-xl", allowedContent: "hidden" }} />
               </div>
@@ -131,5 +126,13 @@ const redirectUrl = searchParams.get("redirect");
         </div>
       </main>
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={32} /></div>}>
+      <ProfileForm />
+    </Suspense>
   );
 }

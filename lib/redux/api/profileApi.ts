@@ -21,14 +21,14 @@ export const profileApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     
     getProfile: builder.query<IProfile, void>({
-      query: () => "/user/profile",
+      query: () => "/profile",
       providesTags: ["Profile"],
       keepUnusedDataFor: 0,
     }),
 
     updateProfile: builder.mutation<IProfile, Partial<IProfile>>({
       query: (body) => ({
-        url: "/user/profile",
+        url: "/profile",
         method: "PUT",
         body,
       }),

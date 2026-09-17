@@ -27,7 +27,7 @@ interface Snapshot {
   email?: string;
 }
 
-type ValidStatus = "pending" | "reviewed" | "shortlisted" | "accepted" | "rejected";
+type ValidStatus = "pending" | "shortlisted" | "accepted" | "rejected";
 
 const FINAL_STATUSES: ValidStatus[] = ["accepted", "rejected", "shortlisted"];
 
@@ -38,7 +38,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     const body = (await req.json()) as { status?: ValidStatus };
     const { status } = body;
 
-    const VALID_STATUSES: ValidStatus[] = ["pending", "reviewed", "shortlisted", "accepted", "rejected"];
+    const VALID_STATUSES: ValidStatus[] = ["pending", "shortlisted", "accepted", "rejected"];
     if (!status || !VALID_STATUSES.includes(status)) {
       return NextResponse.json({ message: "Invalid status" }, { status: 400 });
     }
