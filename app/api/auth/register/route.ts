@@ -17,22 +17,26 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Password must be at least 6 characters" }, { status: 400 });
     }
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    // Normalize email + validate role
+    const normalizedEmail = email.toLowerCase().trim();
+    const validRoles = ["jobseeker", "employer"];
+    const userRole = validRoles.includes(role) ? role : "jobseeker";
+
+    // Check if user already exists (case-insensitive)
+    const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       return NextResponse.json({ message: "User already exists with this email" }, { status: 409 });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create new user with firstName + lastName
     const newUser = await User.create({
-      firstName,
-      lastName,
-      email,
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: normalizedEmail,
       password: hashedPassword,
-      role: role || "jobseeker"
+      role: userRole,
+      provider: "credentials",
     });
 
     return NextResponse.json(
@@ -42,7 +46,7 @@ export async function POST(req: Request) {
           id: newUser._id, 
           firstName: newUser.firstName,
           lastName: newUser.lastName,
-          name: newUser.name, // virtual field
+          name: newUser.name,
           email: newUser.email,
           role: newUser.role
         } 

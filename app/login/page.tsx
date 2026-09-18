@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signIn, getSession } from "next-auth/react";
 import { Mail, Lock, Loader2, Briefcase, AlertCircle } from "lucide-react";
+import Image from "next/image";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   
   const router = useRouter();
 
@@ -32,7 +34,6 @@ export default function LoginPage() {
         return;
       }
 
-      // Get session to read role
       const session = await getSession();
       const role = (session?.user as { role?: string })?.role;
 
@@ -46,9 +47,20 @@ export default function LoginPage() {
       router.refresh();
 
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Login failed. Please check your credentials.";
+      const message = err instanceof Error ? err.message : "Login failed.";
       setError(message);
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setError("");
+    setIsGoogleLoading(true);
+    try {
+      await signIn("google", { callbackUrl: "/dashboard" });
+    } catch {
+      setError("Google login failed");
+      setIsGoogleLoading(false);
     }
   };
 
@@ -72,6 +84,31 @@ export default function LoginPage() {
               {error}
             </div>
           )}
+
+          {/* GOOGLE BUTTON */}
+          <button
+            onClick={handleGoogleLogin}
+            disabled={isGoogleLoading || isLoading}
+            className="w-full bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 mb-5 disabled:opacity-50"
+          >
+            {isGoogleLoading ? <Loader2 size={18} className="animate-spin" /> : (
+              <Image 
+                src="https://www.svgrepo.com/show/475656/google-color.svg" 
+                alt="Google" 
+                width={20} 
+                height={20} 
+                className="w-5 h-5"
+                unoptimized // needed for external svg
+              />
+            )}
+            {isGoogleLoading ? "Connecting..." : "Continue with Google"}
+          </button>
+
+          <div className="flex items-center gap-3 mb-5">
+            <div className="h-px bg-gray-200 flex-1" />
+            <span className="text-sm text-gray-400">or</span>
+            <div className="h-px bg-gray-200 flex-1" />
+          </div>
           
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
@@ -106,7 +143,6 @@ export default function LoginPage() {
                   disabled={isLoading}
                 />
               </div>
-              {/* FORGOT PASSWORD LINK */}
               <div className="text-right mt-2">
                 <Link href="/forgot-password" className="text-sm text-blue-600 font-medium hover:underline">
                   Forgot password?
@@ -117,7 +153,7 @@ export default function LoginPage() {
             <button 
               type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md" 
-              disabled={isLoading}
+              disabled={isLoading || isGoogleLoading}
             >
               {isLoading ? <Loader2 size={18} className="animate-spin" /> : null}
               {isLoading ? "Signing In..." : "Login"}

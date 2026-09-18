@@ -7,6 +7,12 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useRegisterMutation } from "@/lib/redux/api/authApi";
 import { Mail, Lock, User, Briefcase, Loader2, Users, AlertCircle } from "lucide-react";
+import Image from "next/image";
+
+type ApiError = {
+  data?: { message?: string };
+  message?: string;
+}
 
 export default function RegisterPage() {
   const [firstName, setFirstName] = useState("");
@@ -15,6 +21,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"jobseeker" | "employer">("jobseeker");
   const [error, setError] = useState("");
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   
   const [register, { isLoading }] = useRegisterMutation();
   const router = useRouter();
@@ -24,10 +31,8 @@ export default function RegisterPage() {
     setError("");
     
     try {
-      // Send firstName + lastName instead of name
       await register({ firstName, lastName, email, password, role }).unwrap();
 
-      // auto-login with NextAuth
       await signIn("credentials", {
         email,
         password,
@@ -36,16 +41,29 @@ export default function RegisterPage() {
 
       router.push("/dashboard"); 
       
-    } catch (err: any) {
-      setError(err.data?.message || "Registration failed. Please try again.");
+    } catch (err: unknown) {
+      const apiErr = err as ApiError;
+      setError(apiErr.data?.message || apiErr.message || "Registration failed. Please try again.");
       console.error("Register failed:", err);
     }
   }
 
+  const handleGoogleRegister = async () => {
+  setError("");
+  setIsGoogleLoading(true);
+  // Save role in cookie for server to read - Next.js 15 compatible
+  document.cookie = `register_role=${role}; path=/; max-age=300; SameSite=Lax`;
+  try {
+    await signIn("google", { callbackUrl: "/dashboard" });
+  } catch {
+    setError("Google sign up failed");
+    setIsGoogleLoading(false);
+  }
+};
+
   return (
     <div className="min-h-screen bg-linear-to-br from-blue-600 to-indigo-700 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo and Title */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl mb-4 shadow-lg">
             <Briefcase size={32} className="text-blue-600" />
@@ -54,20 +72,42 @@ export default function RegisterPage() {
           <p className="text-blue-100 mt-2">Create your account</p>
         </div>
 
-        {/* Register Card */}
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Create Account</h2>
           
-          {/* Error Alert */}
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-5 text-sm flex items-center gap-2">
               <AlertCircle size={16} />
               {error}
             </div>
           )}
+
+          {/* GOOGLE BUTTON */}
+          <button
+            onClick={handleGoogleRegister}
+            disabled={isGoogleLoading || isLoading}
+            className="w-full bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 mb-5 disabled:opacity-50"
+          >
+            {isGoogleLoading ? <Loader2 size={18} className="animate-spin" /> : (
+                         <Image 
+                              src="https://www.svgrepo.com/show/475656/google-color.svg" 
+                              alt="Google" 
+                              width={20} 
+                              height={20} 
+                              className="w-5 h-5"
+                              unoptimized // needed for external svg
+                            />
+            )}
+            {isGoogleLoading ? "Connecting..." : "Continue with Google"}
+          </button>
+
+          <div className="flex items-center gap-3 mb-5">
+            <div className="h-px bg-gray-200 flex-1" />
+            <span className="text-sm text-gray-400">or</span>
+            <div className="h-px bg-gray-200 flex-1" />
+          </div>
           
           <form onSubmit={handleRegister} className="space-y-5">
-            {/* First Name + Last Name */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
@@ -103,7 +143,6 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Email Input */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
               <div className="relative">
@@ -121,7 +160,6 @@ export default function RegisterPage() {
               </div>
             </div>
             
-            {/* Password Input */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
               <div className="relative">
@@ -140,7 +178,6 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Role Selection Toggle */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">I am a</label>
               <div className="grid grid-cols-2 gap-3">
@@ -171,19 +208,16 @@ export default function RegisterPage() {
               </div>
             </div>
             
-            {/* Submit Button */}
             <button 
               type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md" 
-              disabled={isLoading}
+              disabled={isLoading || isGoogleLoading}
             >
               {isLoading ? <Loader2 size={18} className="animate-spin" /> : null}
               {isLoading ? "Creating Account..." : "Create Account"}
             </button>
-            
           </form>
           
-          {/* Login Link */}
           <p className="text-center text-sm text-gray-600 mt-6">
             Already have an account?{" "}
             <Link href="/login" className="text-blue-600 font-semibold hover:underline">

@@ -5,8 +5,10 @@ export interface IUser extends Document {
   lastName: string;
   name: string; // virtual
   email: string;
-  password: string;
+  password?: string;
   role: "jobseeker" | "employer" | "admin";
+  provider?: string; // <- ADD
+  image?: string; // <- ADD
   resetPasswordToken?: string;
   resetPasswordExpire?: Date;
   createdAt: Date;
@@ -36,7 +38,7 @@ const UserSchema: Schema = new Schema(
     },
     password: {
       type: String,
-      required: [true, "Password is required"],
+      required: false, // <- CHANGE to false
       select: false,
     },
     role: {
@@ -44,6 +46,13 @@ const UserSchema: Schema = new Schema(
       enum: ["jobseeker", "employer", "admin"],
       default: "jobseeker",
       index: true,
+    },
+    provider: {
+      type: String,
+      default: "credentials",
+    },
+    image: {
+      type: String,
     },
     resetPasswordToken: String,
     resetPasswordExpire: Date,
@@ -55,7 +64,7 @@ const UserSchema: Schema = new Schema(
   }
 );
 
-// full name virtual
+// full name virtual - KEEP as is
 UserSchema.virtual("name").get(function (this: IUser) {
   return `${this.firstName} ${this.lastName}`;
 });
