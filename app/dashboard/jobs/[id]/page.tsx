@@ -121,7 +121,8 @@ function JobDetailContent() {
             <div className="flex flex-wrap gap-x-5 gap-y-2 text-gray-600 mb-4">
               <div className="flex items-center gap-2"><Building size={16} className="text-gray-400" /> {job.company}</div>
               <div className="flex items-center gap-2"><MapPin size={16} className="text-gray-400" /> {job.location}</div>
-              <div className="flex items-center gap-2 text-green-700 font-semibold"><DollarSign size={16} className="text-green-600" /> {job.salary}</div>
+              
+              <div className="flex items-center gap-2 text-green-700 font-semibold">Rs. {Number(job.salary).toLocaleString("en-PK")} / month</div>
               <div className="flex items-center gap-2"><Calendar size={16} className="text-gray-400" /> Posted {new Date(job.createdAt).toLocaleDateString()}</div>
               <div className="flex items-center gap-2"><Users size={16} className="text-gray-400" /> {applicationCount} Applicants</div>
             </div>
