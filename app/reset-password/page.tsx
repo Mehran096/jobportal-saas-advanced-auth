@@ -1,12 +1,13 @@
 "use client";
+export const dynamic = 'force-dynamic';
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useResetPasswordMutation } from "@/lib/redux/api/authApi";
 import { Lock, Loader2, Briefcase, AlertCircle, CheckCircle } from "lucide-react";
 
-export default function ResetPasswordPage() {
+function ResetForm() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const router = useRouter();
@@ -26,9 +27,13 @@ export default function ResetPasswordPage() {
       setError("Passwords do not match");
       return;
     }
+    if (!token) {
+      setError("Invalid token");
+      return;
+    }
 
     try {
-      const res = await resetPassword({ token: token!, password }).unwrap();
+      const res = await resetPassword({ token, password }).unwrap();
       setMessage(res.message);
       setTimeout(() => router.push("/login"), 2000);
     } catch (err: unknown) {
@@ -68,7 +73,7 @@ export default function ResetPasswordPage() {
 
           {message && (
             <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-5 text-sm flex items-center gap-2">
-              <CheckCircle size={16} /> {message} Redirecting to login...
+              <CheckCircle size={16} /> {message} Redirecting...
             </div>
           )}
           {error && (
@@ -88,7 +93,7 @@ export default function ResetPasswordPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                   disabled={isLoading}
                 />
               </div>
@@ -104,7 +109,7 @@ export default function ResetPasswordPage() {
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                   disabled={isLoading}
                 />
               </div>
@@ -112,7 +117,7 @@ export default function ResetPasswordPage() {
 
             <button
               disabled={isLoading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {isLoading ? <Loader2 size={18} className="animate-spin" /> : null}
               {isLoading ? "Resetting..." : "Reset Password"}
@@ -120,13 +125,22 @@ export default function ResetPasswordPage() {
           </form>
 
           <p className="text-center text-sm text-gray-600 mt-6">
-            Remembered?{" "}
-            <Link href="/login" className="text-blue-600 font-semibold hover:underline">
-              Back to login
-            </Link>
+            Remembered? <Link href="/login" className="text-blue-600 font-semibold hover:underline">Back to login</Link>
           </p>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="animate-spin text-blue-600" />
+      </div>
+    }>
+      <ResetForm />
+    </Suspense>
   );
 }
