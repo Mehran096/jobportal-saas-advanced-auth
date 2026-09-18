@@ -5,7 +5,8 @@ export interface Job {
   title: string;
   company: string;
   location: string;
-  salary: string;
+  salary: number;
+  type?: string; // Full-time, Part-time, Remote, Contract, Internship
   description?: string;
   createdAt?: string;
 }
@@ -43,13 +44,30 @@ export interface JobseekerStats {
 
 type ApplicationsResponse = Application[] | { applications: Application[] };
 
+type JobQueryParams = {
+  search?: string;
+  location?: string;
+  jobType?: string;
+  minSalary?: string;
+  datePosted?: string;
+};
+
 export const jobseekerApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getAllJobs: builder.query<{ jobs: Job[]; count?: number }, { search?: string; location?: string } | void>({
-      query: (params) => ({
-        url: "/jobs",
-        params: params ?? {},
-      }),
+    getAllJobs: builder.query<{ jobs: Job[]; count?: number }, JobQueryParams | void>({
+      query: (params) => {
+        const cleanParams: Record<string, string> = {};
+        if (params?.search?.trim()) cleanParams.search = params.search.trim();
+        if (params?.location?.trim()) cleanParams.location = params.location.trim();
+        if (params?.jobType) cleanParams.jobType = params.jobType;
+        if (params?.minSalary) cleanParams.minSalary = params.minSalary;
+        if (params?.datePosted) cleanParams.datePosted = params.datePosted;
+
+        return {
+          url: "/jobs",
+          params: cleanParams,
+        };
+      },
       providesTags: ["Jobs"],
     }),
 
@@ -76,7 +94,6 @@ export const jobseekerApi = baseApi.injectEndpoints({
       providesTags: ["JobSeeker"],
     }),
 
-    // --- NEW SAVED JOBS ---
     getSavedJobs: builder.query<{ savedJobs: Job[] }, void>({
       query: () => "/saved-jobs",
       providesTags: ["SavedJobs"],

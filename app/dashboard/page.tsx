@@ -133,10 +133,10 @@ export default function DashboardPage() {
                     <p className="text-sm text-gray-500">Create a new job listing</p>
                   </div>
                 </Link>
-                <Link href="/dashboard/profile" className="bg-white p-5 rounded-xl border hover:shadow-md transition">
+                {/* <Link href="/dashboard/profile" className="bg-white p-5 rounded-xl border hover:shadow-md transition">
                   <h3 className="font-semibold mb-1 text-gray-900">My Profile</h3>
                   <p className="text-sm text-gray-500">Update photo, CV & skills</p>
-                </Link>
+                </Link> */}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

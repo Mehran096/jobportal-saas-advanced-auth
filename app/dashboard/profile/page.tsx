@@ -13,6 +13,8 @@ function ProfileForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirect");
+  const isFromJob = redirectUrl?.includes("/dashboard/jobs/");
+
   const { data: profile, isLoading } = useGetProfileQuery();
   const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation();
 
@@ -46,10 +48,18 @@ function ProfileForm() {
     }
     try {
       await updateProfile(form).unwrap();
-      toast.success("Profile saved!");
-      setTimeout(() => {
-        router.push(redirectUrl || "/dashboard/jobs");
-      }, 600);
+
+      if (isFromJob) {
+        toast.success("CV updated! Back to job...");
+        // clean possible old params and add edited=1
+        const cleanRedirect = (redirectUrl || "").replace(/&?edited=1|&?edit=1/g, "").replace(/\?$/, "");
+        const separator = cleanRedirect.includes("?")? "&" : "?";
+        const finalUrl = cleanRedirect.includes("edited")? cleanRedirect : `${cleanRedirect}${separator}edited=1`;
+        setTimeout(() => router.push(finalUrl), 600);
+      } else {
+        toast.success("Profile saved!");
+        setTimeout(() => router.push(redirectUrl || "/dashboard/jobs"), 600);
+      }
     } catch {
       toast.error("Failed to save ❌");
     }
@@ -68,6 +78,12 @@ function ProfileForm() {
     <div className="min-h-screen bg-[#f8fafc]">
       <DashboardHeader />
       <main className="max-w-6xl mx-auto p-4 md:p-8">
+        {isFromJob && (
+          <div className="bg-blue-50 border border-blue-200 text-blue-800 text-sm px-4 py-3 rounded-xl mb-4 flex items-center gap-2">
+            <FileText size={16} /> Updating CV for job — after save you will be redirected and Apply will work directly without modal
+          </div>
+        )}
+
         <div className="relative overflow-hidden bg-linear-to-br from-blue-600 via-blue-600 to-indigo-600 text-white rounded-[20px] p-6 md:p-8 mb-6 md:mb-8 shadow-xl">
           <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
           <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2"><Sparkles size={24} /> My Profile</h1>
@@ -93,7 +109,7 @@ function ProfileForm() {
                 <div className="bg-green-50 border border-green-200/60 p-4 rounded-xl mb-4">
                   <p className="truncate font-semibold text-green-800 text-sm">{form.resumeName || "Resume.pdf"}</p>
                   <div className="flex items-center gap-3 mt-2">
-                    <a href={form.resumeUrl} target="_blank" className="text-xs bg-green-600 text-white px-3 py-1 rounded-full">View PDF</a>
+                    <a href={form.resumeUrl} target="_blank" rel="noopener noreferrer" className="text-xs bg-green-600 text-white px-3 py-1 rounded-full">View PDF</a>
                     <a href={form.resumeUrl} download className="text-xs text-green-700 underline">Download</a>
                   </div>
                 </div>
@@ -120,7 +136,7 @@ function ProfileForm() {
               </div>
             </div>
             <button disabled={isUpdating} onClick={handleSave} className="mt-8 w-full bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98]">
-              {isUpdating? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}{isUpdating? "Saving..." : "Save Profile"}
+              {isUpdating? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}{isUpdating? "Saving..." : isFromJob? "Save & Apply to Job" : "Save Profile"}
             </button>
           </div>
         </div>
