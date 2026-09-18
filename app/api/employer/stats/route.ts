@@ -4,16 +4,22 @@ import Job from "@/models/Job";
 import Application from "@/models/Application";
 import { verifyToken } from "@/lib/auth";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   try {
     await dbConnect();
     const user = await verifyToken(req);
     
+    if (!user || !user.role) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     if (user.role !== "employer") {
       return NextResponse.json({ message: "Only employers can access" }, { status: 403 });
     }
 
-    // FIXED: don't convert to ObjectId, use user.id directly (matches Job.create { postedBy: user.id })
+    // Use string id - matches Job.create { postedBy: user.id }
     const jobs = await Job.find({ postedBy: user.id }).select("_id").lean();
     const jobIds = jobs.map(j => j._id);
 
@@ -35,7 +41,7 @@ export async function GET(req: NextRequest) {
         .sort({ createdAt: -1 })
         .limit(5)
         .populate("job", "title")
-        .lean() // FIXED: no populate applicant, use snapshot
+        .lean()
     ]);
 
     return NextResponse.json({
@@ -43,12 +49,18 @@ export async function GET(req: NextRequest) {
       totalApplicants,
       pendingApplicants,
       hired,
-      recentApplications, // has snapshot.firstName lastName
+      recentApplications,
     }, { status: 200 });
 
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Server error";
     console.error("Employer Stats Error:", error);
+    const message = error instanceof Error ? error.message : "Server error";
+    
+    // Return 401 for auth errors, not 500
+    if (message.toLowerCase().includes("token") || message.toLowerCase().includes("unauthorized") || message.toLowerCase().includes("no token")) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     return NextResponse.json({ message }, { status: 500 });
   }
 }
