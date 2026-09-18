@@ -4,10 +4,16 @@ import Application from "@/models/Application";
 import SavedJob from "@/models/SavedJob";
 import { verifyToken } from "@/lib/auth";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   try {
     await dbConnect();
     const user = await verifyToken(req);
+
+    if (!user || !user.role) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
     
     if (user.role !== "jobseeker") {
       return NextResponse.json({ message: "Only jobseekers can access" }, { status: 403 });
@@ -29,7 +35,13 @@ export async function GET(req: NextRequest) {
     }, { status: 200 });
 
   } catch (error: unknown) {
+    console.error("Jobseeker Stats Error:", error);
     const message = error instanceof Error ? error.message : "Server error";
+
+    if (message.toLowerCase().includes("token") || message.toLowerCase().includes("unauthorized") || message.toLowerCase().includes("no token")) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     return NextResponse.json({ message }, { status: 500 });
   }
 }
