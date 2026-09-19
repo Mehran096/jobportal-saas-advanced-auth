@@ -1,7 +1,7 @@
 "use client";
 export const dynamic = 'force-dynamic';
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import DashboardHeader from "@/app/components/DashboardHeader";
@@ -90,6 +90,17 @@ function ApplicantsContent() {
   const filteredApps = filter === "all"? applications : applications.filter((app) => app.status === filter);
   const getCount = (s: Status) => (s === "all"? applications.length : applications.filter((a) => a.status === s).length);
 
+useEffect(() => {
+  if (selectedApp) {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
+  }
+  return () => {
+    document.body.style.overflow = '';
+  };
+}, [selectedApp]);
+
   const handleUpdateStatus = async (appId: string, newStatus: FinalStatus) => {
     if (!confirm(`Are you sure you want to mark as ${newStatus}? This cannot be changed.`)) return;
     setLoadingAction(newStatus);
@@ -175,7 +186,7 @@ function ApplicantsContent() {
 
         {/* FIXED MODAL: bottom sheet on mobile, centered on desktop */}
         {selectedApp?.snapshot && (
-          <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setSelectedApp(null)}>
+          <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overscroll-contain" onClick={() => setSelectedApp(null)}>
             <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
               <div className="p-4 sm:p-6">
                 <div className="flex justify-between items-center mb-4">
