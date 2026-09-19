@@ -158,9 +158,9 @@ function ProfileForm() {
     <>
       {/* DESKTOP - iframe preview */}
       <div className="hidden sm:block mb-4 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
-        <iframe src={pdfToShow} className="w-full h-[600px]" title="CV Preview" />
+        <iframe src={pdfToShow} className="w-full h-150" title="CV Preview" />
         <div className="p-2 flex justify-between bg-white border-t text-[11px]">
-          <span className="truncate max-w-[200px]">{form.resumeName || "CV.pdf"}</span>
+          <span className="truncate max-w-50">{form.resumeName || "CV.pdf"}</span>
           <a href={pdfToShow} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline shrink-0 ml-2">Open full</a>
         </div>
       </div>
@@ -169,7 +169,7 @@ function ProfileForm() {
     <div className="sm:hidden mb-4 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
       {pdfToShow.startsWith("blob:")? (
         // Local file selected but not uploaded yet - blob can't be viewed by Google, show object tag
-        <object data={pdfToShow} type="application/pdf" className="w-full h-[500px]">
+        <object data={pdfToShow} type="application/pdf" className="w-full h-125">
           <div className="p-8 text-center">
             <div className="w-16 h-16 mx-auto bg-red-50 rounded-xl flex items-center justify-center mb-3">
               <FileText className="text-red-500" size={32} />
@@ -183,7 +183,7 @@ function ProfileForm() {
         // UploadThing URL - Google viewer works perfectly on mobile
         <iframe
           src={`https://docs.google.com/gview?url=${encodeURIComponent(pdfToShow)}&embedded=true`}
-          className="w-full h-[500px] bg-white"
+          className="w-full h-125 bg-white"
           title="CV Preview Mobile"
         />
       )}
@@ -230,7 +230,7 @@ function ProfileForm() {
               </div>
             </div>
 
-            <button disabled={isDisabled} onClick={handleSave} title={isCV_missing? "Please upload CV first" : ""} className={`mt-6 w-full font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-sm transition ${isCV_missing? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90 disabled:opacity-50"}`}>
+            <button disabled={isDisabled} onClick={handleSave} title={isCV_missing? "Please upload CV first" : ""} className={`mt-6 w-full font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-sm transition ${isCV_missing? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-linear-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90 disabled:opacity-50"}`}>
               {isBusy? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />} {isCV_missing? "Upload CV to Save" : isBusy? "Uploading..." : isFromJob? "Save & Apply to Job" : "Save Profile"}
             </button>
             {isCV_missing && <p className="text-[11px] text-amber-600 mt-2 text-center flex items-center justify-center gap-1"><AlertCircle size={12} /> CV is required to save profile</p>}
