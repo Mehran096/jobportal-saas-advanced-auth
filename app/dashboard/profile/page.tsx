@@ -144,27 +144,63 @@ function ProfileForm() {
             </div>
 
             <div className={`bg-white rounded-[20px] border p-5 sm:p-6 shadow-sm ${isCV_missing? 'border-yellow-200 ring-2 ring-yellow-100' : 'border-gray-100'}`}>
-              <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2 text-sm"><FileText size={18} /> Resume / CV {pdfToShow && <span className="text-green-600 text-[10px] ml-auto">● Preview below</span>}</h3>
-              {pdfToShow? (
-                <div className="mb-4 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
-                  <iframe src={pdfToShow} className="w-full h-[600px]" title="CV Preview" />
-                  <div className="p-2 flex justify-between bg-white border-t text-[11px]">
-                    <span className="truncate">{form.resumeName}</span>
-                    <a href={pdfToShow} target="_blank" className="text-blue-600 underline shrink-0 ml-2">Open full</a>
-                  </div>
-                </div>
-              ) : (
-                <div className="border border-dashed border-gray-300 rounded-xl p-8 text-center mb-4 bg-gray-50/50">
-                  <FileText className="mx-auto text-gray-300 mb-2" />
-                  <p className="text-xs text-gray-400">No CV yet — upload PDF to preview here</p>
-                </div>
-              )}
-              <label className={`block w-full text-center text-white text-sm font-medium py-2.5 rounded-xl cursor-pointer ${isCV_missing? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-gray-900 hover:bg-black'}`}>
-                {pdfToShow? "Replace CV (PDF)" : "Choose CV (PDF)"}
-                <input type="file" accept="application/pdf" className="hidden" onChange={handleResumeChange} />
-              </label>
-              {resumeFile && <p className="text-xs text-green-600 mt-2 truncate">{resumeFile.name} - will upload on Save</p>}
-            </div>
+  <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2 text-sm">
+    <FileText size={18} /> Resume / CV 
+    {pdfToShow && <span className="text-green-600 text-[10px] ml-auto">● Preview below</span>}
+  </h3>
+
+  {pdfToShow ? (
+    <>
+      {/* DESKTOP - iframe preview */}
+      <div className="hidden sm:block mb-4 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+        <iframe src={pdfToShow} className="w-full h-[600px]" title="CV Preview" />
+        <div className="p-2 flex justify-between bg-white border-t text-[11px]">
+          <span className="truncate max-w-[200px]">{form.resumeName || "CV.pdf"}</span>
+          <a href={pdfToShow} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline shrink-0 ml-2">Open full</a>
+        </div>
+      </div>
+
+      {/* MOBILE - No iframe, show card + Open button (iframe fails on mobile) */}
+      <div className="sm:hidden mb-4 rounded-xl border border-gray-200 bg-gray-50 p-4 text-center">
+        <div className="w-16 h-16 mx-auto bg-red-50 rounded-xl flex items-center justify-center mb-3">
+          <FileText className="text-red-500" size={32} />
+        </div>
+        <p className="text-xs font-medium text-gray-800 truncate px-2">{form.resumeName || "Your CV.pdf"}</p>
+        <p className="text-[10px] text-gray-400 mt-1">PDF preview not supported on mobile</p>
+        
+        <div className="grid grid-cols-2 gap-2 mt-4">
+          <a 
+            href={pdfToShow} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="bg-blue-600 text-white text-xs font-medium py-2.5 rounded-xl text-center"
+          >
+            Open PDF
+          </a>
+          <a 
+            href={`https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(pdfToShow)}`}
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="bg-gray-900 text-white text-xs font-medium py-2.5 rounded-xl text-center"
+          >
+            View in Browser
+          </a>
+        </div>
+      </div>
+    </>
+  ) : (
+    <div className="border border-dashed border-gray-300 rounded-xl p-8 text-center mb-4 bg-gray-50/50">
+      <FileText className="mx-auto text-gray-300 mb-2" />
+      <p className="text-xs text-gray-400">No CV yet — upload PDF</p>
+    </div>
+  )}
+
+  <label className={`block w-full text-center text-white text-sm font-medium py-2.5 rounded-xl cursor-pointer ${isCV_missing? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-gray-900 hover:bg-black'}`}>
+    {pdfToShow? "Replace CV (PDF)" : "Choose CV (PDF)"}
+    <input type="file" accept="application/pdf" className="hidden" onChange={handleResumeChange} />
+  </label>
+  {resumeFile && <p className="text-xs text-green-600 mt-2 truncate">{resumeFile.name} - will upload on Save</p>}
+</div>
 
            
           </div>
