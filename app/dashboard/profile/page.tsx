@@ -160,40 +160,45 @@ function ProfileForm() {
         </div>
       </div>
 
-      {/* MOBILE - No iframe, show card + Open button (iframe fails on mobile) */}
-      <div className="sm:hidden mb-4 rounded-xl border border-gray-200 bg-gray-50 p-4 text-center">
-        <div className="w-16 h-16 mx-auto bg-red-50 rounded-xl flex items-center justify-center mb-3">
-          <FileText className="text-red-500" size={32} />
-        </div>
-        <p className="text-xs font-medium text-gray-800 truncate px-2">{form.resumeName || "Your CV.pdf"}</p>
-        <p className="text-[10px] text-gray-400 mt-1">PDF preview not supported on mobile</p>
-        
-        <div className="grid grid-cols-2 gap-2 mt-4">
-          <a 
-            href={pdfToShow} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="bg-blue-600 text-white text-xs font-medium py-2.5 rounded-xl text-center"
-          >
-            Open PDF
-          </a>
-          <a 
-            href={`https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(pdfToShow)}`}
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="bg-gray-900 text-white text-xs font-medium py-2.5 rounded-xl text-center"
-          >
-            View in Browser
-          </a>
+      {/* MOBILE - REAL PREVIEW with Google Docs Viewer */}
+    <div className="sm:hidden mb-4 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+      {pdfToShow.startsWith("blob:")? (
+        // Local file selected but not uploaded yet - blob can't be viewed by Google, show object tag
+        <object data={pdfToShow} type="application/pdf" className="w-full h-[500px]">
+          <div className="p-8 text-center">
+            <div className="w-16 h-16 mx-auto bg-red-50 rounded-xl flex items-center justify-center mb-3">
+              <FileText className="text-red-500" size={32} />
+            </div>
+            <p className="text-xs font-medium">{form.resumeName}</p>
+            <p className="text-[10px] text-gray-400 mt-1">Preview after Save, tap Open for now</p>
+            <a href={pdfToShow} target="_blank" className="mt-3 inline-block bg-blue-600 text-white text-xs px-4 py-2 rounded-xl">Open PDF</a>
+          </div>
+        </object>
+      ) : (
+        // UploadThing URL - Google viewer works perfectly on mobile
+        <iframe
+          src={`https://docs.google.com/gview?url=${encodeURIComponent(pdfToShow)}&embedded=true`}
+          className="w-full h-[500px] bg-white"
+          title="CV Preview Mobile"
+        />
+      )}
+
+      <div className="p-2 flex gap-2 bg-white border-t">
+        <a href={pdfToShow} target="_blank" rel="noopener noreferrer" className="flex-1 bg-blue-600 text-white text-xs font-medium py-2.5 rounded-xl text-center">
+          Open PDF
+        </a>
+        <div className="flex-1 bg-gray-100 text-gray-700 text-[10px] py-2.5 rounded-xl text-center truncate px-1">
+          {form.resumeName || "CV.pdf"}
         </div>
       </div>
-    </>
-  ) : (
-    <div className="border border-dashed border-gray-300 rounded-xl p-8 text-center mb-4 bg-gray-50/50">
-      <FileText className="mx-auto text-gray-300 mb-2" />
-      <p className="text-xs text-gray-400">No CV yet — upload PDF</p>
     </div>
-  )}
+  </>
+) : (
+  <div className="border border-dashed border-gray-300 rounded-xl p-8 text-center mb-4 bg-gray-50/50">
+    <FileText className="mx-auto text-gray-300 mb-2" />
+    <p className="text-xs text-gray-400">No CV yet — upload PDF to preview here</p>
+  </div>
+)}
 
   <label className={`block w-full text-center text-white text-sm font-medium py-2.5 rounded-xl cursor-pointer ${isCV_missing? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-gray-900 hover:bg-black'}`}>
     {pdfToShow? "Replace CV (PDF)" : "Choose CV (PDF)"}
