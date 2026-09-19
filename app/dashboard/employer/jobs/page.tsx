@@ -108,7 +108,7 @@ export default function MyJobsPage() {
                   </div>
 
                   <div className="grid grid-cols-4 gap-2 mt-2">
-                    <Link href={`/dashboard/employer/jobs/${job._id}`} className="bg-purple-50 hover:bg-purple-100 text-purple-700 px-3 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-1.5 transition">
+                    <Link href={`/dashboard/employer/jobs/${job._id}`} className="bg-purple-50 hover:bg-purple-100 text-purple-700 px-1 md:px-3 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-1.5 transition">
                       <Eye size={14} /> View
                     </Link>
                     <Link href={`/dashboard/employer/applicants?jobId=${job._id}`} className="bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-2 rounded-lg text-sm font-medium text-center transition">
