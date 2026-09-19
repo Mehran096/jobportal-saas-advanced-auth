@@ -9,8 +9,9 @@ import { UTApi } from "uploadthing/server";
 function getFileKeyFromUrl(url: string): string {
   if (!url) return "";
   try {
-    const parts = url.split("/f/");
-    return parts[1]?.split("/")[0] || "";
+    const afterF = url.split("/f/")[1];
+    if (!afterF) return url.split("/").pop()?.split("?")[0] || "";
+    return afterF.split("/")[0].split("?")[0];
   } catch {
     return "";
   }
@@ -66,7 +67,7 @@ export async function PUT(req: Request) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await req.json() as {
+  const body = (await req.json()) as {
     firstName?: string;
     lastName?: string;
     profileImage?: string;
@@ -92,22 +93,25 @@ export async function PUT(req: Request) {
     if (body.profileImage && existing.profileImage && body.profileImage!== existing.profileImage) {
       const oldKey = getFileKeyFromUrl(existing.profileImage);
       if (oldKey) {
-        try {
-          await utapi.deleteFiles(oldKey);
-        } catch (e) {
-          console.log("Failed to delete old image", e);
-        }
+        try { await utapi.deleteFiles(oldKey); } catch (e) { console.log("Failed to delete old image", e); }
       }
     }
-
+    if (body.profileImage === "" && existing.profileImage) {
+      const oldKey = getFileKeyFromUrl(existing.profileImage);
+      if (oldKey) {
+        try { await utapi.deleteFiles(oldKey); } catch (e) { console.log("Failed to delete on user delete", e); }
+      }
+    }
     if (body.resumeUrl && existing.resumeUrl && body.resumeUrl!== existing.resumeUrl) {
       const oldKey = getFileKeyFromUrl(existing.resumeUrl);
       if (oldKey) {
-        try {
-          await utapi.deleteFiles(oldKey);
-        } catch (e) {
-          console.log("Failed to delete old resume", e);
-        }
+        try { await utapi.deleteFiles(oldKey); } catch (e) { console.log("Failed to delete old resume", e); }
+      }
+    }
+    if (body.resumeUrl === "" && existing.resumeUrl) {
+      const oldKey = getFileKeyFromUrl(existing.resumeUrl);
+      if (oldKey) {
+        try { await utapi.deleteFiles(oldKey); } catch (e) { console.log("Failed to delete resume on delete", e); }
       }
     }
   }
@@ -129,5 +133,65 @@ export async function PUT(req: Request) {
    ...updatedProfile.toObject(),
     email: user.email,
     role: user.role,
+  });
+}
+
+// ===== NEW: CLEAR PROFILE ONLY (keep User) =====
+export async function DELETE() {
+  const session = await getServerSession(authOptions);
+  const email = session?.user?.email;
+
+  if (!email) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  await dbConnect();
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    return NextResponse.json({ message: "User not found" }, { status: 404 });
+  }
+
+  const profile = await Profile.findOne({ user: user._id });
+  if (!profile) {
+    return NextResponse.json({ success: true, message: "Already empty" });
+  }
+
+  // 1. Delete files from UploadThing
+  const keys: string[] = [];
+  if (profile.profileImage) {
+    const k = getFileKeyFromUrl(profile.profileImage);
+    if (k) keys.push(k);
+  }
+  if (profile.resumeUrl) {
+    const k = getFileKeyFromUrl(profile.resumeUrl);
+    if (k) keys.push(k);
+  }
+  if (keys.length) {
+    try { await utapi.deleteFiles(keys); console.log("Deleted on clear:", keys); } catch (e) { console.log("UT delete failed", e); }
+  }
+
+  // 2. Clear fields - works now because required: false
+  const cleared = await Profile.findOneAndUpdate(
+    { user: user._id },
+    {
+      firstName: "",
+      lastName: "",
+      headline: "",
+      bio: "",
+      phone: "",
+      location: "",
+      skills: [],
+      profileImage: "",
+      resumeUrl: "",
+      resumeName: "",
+    },
+    { new: true }
+  );
+
+  return NextResponse.json({
+    success: true,
+    message: "Profile cleared, user kept",
+    profile: cleared,
   });
 }

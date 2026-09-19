@@ -2,8 +2,8 @@ import mongoose, { Schema, Document } from "mongoose";
 
 export interface IProfile extends Document {
   user: mongoose.Types.ObjectId;
-  firstName: string;
-  lastName: string;
+  firstName?: string;
+  lastName?: string;
   headline?: string;
   bio?: string;
   phone?: string;
@@ -27,12 +27,14 @@ const ProfileSchema: Schema = new Schema(
     },
     firstName: {
       type: String,
-      required: true,
+      required: false,
+      default: "",
       trim: true,
     },
     lastName: {
       type: String,
-      required: true,
+      required: false,
+      default: "",
       trim: true,
     },
     headline: {

@@ -1,11 +1,10 @@
 "use client";
-
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useGetProfileQuery, useUpdateProfileMutation } from "@/lib/redux/api/profileApi";
-import { UploadButton } from "@/lib/utils/uploadthing";
+import { useGetProfileQuery, useUpdateProfileMutation, useDeleteProfileMutation } from "@/lib/redux/api/profileApi";
+import { useUploadThing } from "@/lib/utils/uploadthing";
 import DashboardHeader from "@/app/components/DashboardHeader";
-import { Loader2, Save, FileText, User, MapPin, Phone, Briefcase, X, Sparkles } from "lucide-react";
+import { Loader2, Save, FileText, User, MapPin, Phone, Briefcase, X, Sparkles, AlertCircle, Trash2 } from "lucide-react";
 import Image from "next/image";
 import toast from "react-hot-toast";
 
@@ -17,138 +16,212 @@ function ProfileForm() {
 
   const { data: profile, isLoading } = useGetProfileQuery();
   const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation();
+  const [deleteProfile, { isLoading: isDeleting }] = useDeleteProfileMutation();
+
+  const { startUpload: uploadImage, isUploading: isImgUp } = useUploadThing("profileImage");
+  const { startUpload: uploadResume, isUploading: isResUp } = useUploadThing("resume");
 
   const [form, setForm] = useState({
     firstName: "", lastName: "", headline: "", bio: "", phone: "", location: "",
     profileImage: "", resumeUrl: "", resumeName: "", skills: [] as string[]
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const [pdfPreviewLocal, setPdfPreviewLocal] = useState("");
   const [skillInput, setSkillInput] = useState("");
+  const [showDelete, setShowDelete] = useState(false);
+  const initialized = useRef(false);
 
   useEffect(() => {
-    if (profile) {
+    if (profile &&!initialized.current) {
+      initialized.current = true;
       setForm({
-        firstName: profile.firstName || "",
-        lastName: profile.lastName || "",
-        headline: profile.headline || "",
-        bio: profile.bio || "",
-        phone: profile.phone || "",
-        location: profile.location || "",
-        profileImage: profile.profileImage || "",
-        resumeUrl: profile.resumeUrl || "",
-        resumeName: profile.resumeName || "",
-        skills: profile.skills || [],
+        firstName: profile.firstName || "", lastName: profile.lastName || "",
+        headline: profile.headline || "", bio: profile.bio || "",
+        phone: profile.phone || "", location: profile.location || "",
+        profileImage: profile.profileImage || "", resumeUrl: profile.resumeUrl || "",
+        resumeName: profile.resumeName || "", skills: profile.skills || [],
       });
     }
   }, [profile]);
 
-  const handleSave = async () => {
-    if (!form.firstName ||!form.lastName) {
-      toast.error("First & Last name required");
-      return;
-    }
-    try {
-      await updateProfile(form).unwrap();
+  const handleResumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]; if (!f) return;
+    if (f.type!== "application/pdf") { toast.error("PDF only"); return; }
+    setResumeFile(f);
+    setForm(prev => ({...prev, resumeName: f.name }));
+    setPdfPreviewLocal(URL.createObjectURL(f));
+  };
 
-      if (isFromJob) {
-        toast.success("CV updated! Back to job...");
-        // clean possible old params and add edited=1
-        const cleanRedirect = (redirectUrl || "").replace(/&?edited=1|&?edit=1/g, "").replace(/\?$/, "");
-        const separator = cleanRedirect.includes("?")? "&" : "?";
-        const finalUrl = cleanRedirect.includes("edited")? cleanRedirect : `${cleanRedirect}${separator}edited=1`;
-        setTimeout(() => router.push(finalUrl), 600);
-      } else {
-        toast.success("Profile saved!");
-        setTimeout(() => router.push(redirectUrl || "/dashboard/jobs"), 600);
+  const handleSave = async () => {
+    if (!form.firstName ||!form.lastName) { toast.error("First & Last name required"); return; }
+    if (!form.resumeUrl &&!resumeFile) { toast.error("Please upload CV first"); return; }
+    try {
+      const final = {...form };
+      if (imageFile) {
+        toast.loading("Uploading photo...");
+        const res = await uploadImage([imageFile]);
+        if (!res?.[0]?.ufsUrl) throw new Error("Photo upload failed");
+        final.profileImage = res[0].ufsUrl;
+        toast.dismiss();
       }
+      if (resumeFile) {
+        toast.loading("Uploading CV...");
+        const res = await uploadResume([resumeFile]);
+        if (!res?.[0]?.ufsUrl) throw new Error("CV upload failed");
+        final.resumeUrl = res[0].ufsUrl;
+        final.resumeName = res[0].name;
+        toast.dismiss();
+      }
+      await updateProfile(final).unwrap();
+      setImageFile(null); setResumeFile(null); setImagePreview(""); setPdfPreviewLocal("");
+      toast.success(isFromJob? "CV updated! Back to job..." : "Profile saved!");
+      const clean = (redirectUrl || "").replace(/&?edited=1|&?edit=1/g, "").replace(/\?$/, "");
+      const finalUrl = clean.includes("edited")? clean : `${clean}${clean.includes("?")? "&" : "?"}edited=1`;
+      setTimeout(() => router.push(isFromJob? finalUrl : redirectUrl || "/dashboard/jobs"), 600);
+    } catch (err: unknown) {
+      toast.dismiss();
+      const message = err instanceof Error? err.message : "Failed to save ❌";
+      toast.error(message);
+    }
+  };
+
+  const handleClear = async () => {
+    try {
+      await deleteProfile().unwrap();
+      toast.success("Profile cleared");
+      setShowDelete(false);
+      setForm({ firstName: "", lastName: "", headline: "", bio: "", phone: "", location: "", profileImage: "", resumeUrl: "", resumeName: "", skills: [] });
+      setImagePreview(""); setPdfPreviewLocal(""); setImageFile(null); setResumeFile(null);
+      initialized.current = false;
     } catch {
-      toast.error("Failed to save ❌");
+      toast.error("Failed to clear profile");
     }
   };
 
   const addSkill = () => {
     const s = skillInput.trim();
     if (!s || form.skills.includes(s)) return;
-    setForm({...form, skills: [...form.skills, s] });
-    setSkillInput("");
+    setForm({...form, skills: [...form.skills, s] }); setSkillInput("");
   };
 
   if (isLoading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={32} /></div>;
 
+  const isCV_missing =!form.resumeUrl &&!resumeFile;
+  const isBusy = isUpdating || isImgUp || isResUp;
+  const isDisabled = isBusy || isCV_missing;
+  const pdfToShow = pdfPreviewLocal || form.resumeUrl;
+  const hasProfileData =!!(profile?.firstName || profile?.profileImage || profile?.resumeUrl);
+
   return (
     <div className="min-h-screen bg-[#f8fafc]">
       <DashboardHeader />
-      <main className="max-w-6xl mx-auto p-4 md:p-8">
-        {isFromJob && (
-          <div className="bg-blue-50 border border-blue-200 text-blue-800 text-sm px-4 py-3 rounded-xl mb-4 flex items-center gap-2">
-            <FileText size={16} /> Updating CV for job — after save you will be redirected and Apply will work directly without modal
-          </div>
-        )}
-
-        <div className="relative overflow-hidden bg-linear-to-br from-blue-600 via-blue-600 to-indigo-600 text-white rounded-[20px] p-6 md:p-8 mb-6 md:mb-8 shadow-xl">
-          <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
-          <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2"><Sparkles size={24} /> My Profile</h1>
-          <p className="text-blue-100 text-sm mt-2 max-w-xl">This is how employers see you. Keep your photo & CV updated to get 3x more interview calls.</p>
+      <main className="w-full max-w-6xl mx-auto p-3 sm:p-4 md:p-8">
+        <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-600 to-indigo-600 text-white rounded-[20px] p-5 md:p-8 mb-6 shadow-xl">
+          <h1 className="text-xl md:text-3xl font-bold flex items-center gap-2"><Sparkles size={24} /> My Profile</h1>
+          <p className="text-blue-100 text-xs sm:text-sm mt-2">CV is required — button disabled until upload.</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-6 items-start">
-          <div className="space-y-6 lg:sticky lg:top-24">
-            <div className="bg-white rounded-[20px] border border-gray-100 p-6 shadow-sm text-center">
-              <h3 className="font-semibold text-left text-gray-900 mb-4">Profile Photo</h3>
-              <div className="w-32 h-32 mx-auto rounded-full bg-gray-50 overflow-hidden relative ring-4 ring-blue-50 shadow-inner">
-                {form.profileImage? <Image src={form.profileImage} alt="profile" fill className="object-cover" unoptimized /> : <div className="flex items-center justify-center h-full text-gray-400"><User size={44} /></div>}
+        <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-4 sm:gap-6 items-start">
+          {/* LEFT - Photo & CV */}
+          <div className="space-y-4 sm:space-y-6 lg:sticky lg:top-24 order-2 lg:order-1">
+            <div className="bg-white rounded-[20px] border border-gray-100 p-5 sm:p-6 shadow-sm text-center">
+              <h3 className="font-semibold text-left text-gray-900 mb-4 text-sm">Profile Photo</h3>
+              <div className="w-28 h-28 sm:w-32 sm:h-32 mx-auto rounded-full bg-gray-50 overflow-hidden relative ring-4 ring-blue-50 shadow-inner">
+                {imagePreview? <Image src={imagePreview} alt="preview" fill className="object-cover" unoptimized />
+                : form.profileImage? <Image src={form.profileImage} alt="profile" fill className="object-cover" unoptimized />
+                : <div className="flex items-center justify-center h-full text-gray-400"><User size={44} /></div>}
               </div>
-              <div className="mt-5 ut-wrapper">
-                <UploadButton endpoint="profileImage" onClientUploadComplete={(res) => { if (res?.[0]?.ufsUrl) setForm({...form, profileImage: res[0].ufsUrl }); }} appearance={{ container: "w-full!flex!flex-col items-center", button: "w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl ut-button", allowedContent: "hidden" }} />
-                <style>{`.ut-wrapper input[type="file"]{display:none!important}.ut-wrapper label{width:100%} [data-ut-element="button"]{width:100%!important; cursor:pointer}`}</style>
-              </div>
+              <label className="mt-5 block w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl cursor-pointer">
+                Choose Photo
+                <input type="file" accept="image/*" className="hidden" onChange={e => {
+                  const f = e.target.files?.[0]; if (!f) return;
+                  setImageFile(f); setImagePreview(URL.createObjectURL(f));
+                }} />
+              </label>
+              {imageFile && <p className="text-xs text-green-600 mt-2 truncate">{imageFile.name}</p>}
             </div>
 
-            <div className="bg-white rounded-[20px] border border-gray-100 p-6 shadow-sm">
-              <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2"><FileText size={18} className="text-blue-600" /> Resume / CV</h3>
-              {form.resumeUrl? (
-                <div className="bg-green-50 border border-green-200/60 p-4 rounded-xl mb-4">
-                  <p className="truncate font-semibold text-green-800 text-sm">{form.resumeName || "Resume.pdf"}</p>
-                  <div className="flex items-center gap-3 mt-2">
-                    <a href={form.resumeUrl} target="_blank" rel="noopener noreferrer" className="text-xs bg-green-600 text-white px-3 py-1 rounded-full">View PDF</a>
-                    <a href={form.resumeUrl} download className="text-xs text-green-700 underline">Download</a>
+            <div className={`bg-white rounded-[20px] border p-5 sm:p-6 shadow-sm ${isCV_missing? 'border-yellow-200 ring-2 ring-yellow-100' : 'border-gray-100'}`}>
+              <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2 text-sm"><FileText size={18} /> Resume / CV {pdfToShow && <span className="text-green-600 text-[10px] ml-auto">● Preview</span>}</h3>
+              {pdfToShow? (
+                <div className="mb-4 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+                  <iframe src={pdfToShow} className="w-full h-[400px] sm:h-[600px]" title="CV Preview" />
+                  <div className="p-2 flex justify-between bg-white border-t text-[11px]">
+                    <span className="truncate">{form.resumeName}</span>
+                    <a href={pdfToShow} target="_blank" className="text-blue-600 underline ml-2">Open full</a>
                   </div>
                 </div>
-              ) : <div className="border border-dashed rounded-xl p-4 text-center mb-4"><p className="text-sm text-gray-500">No CV uploaded yet — required to apply</p></div>}
-              <div className="mt-3 ut-wrapper">
-                <UploadButton endpoint="resume" onClientUploadComplete={(res) => { if (res?.[0]) setForm({...form, resumeUrl: res[0].ufsUrl, resumeName: res[0].name }); }} appearance={{ container: "w-full!flex!flex-col items-center", button: "w-full bg-gray-900 hover:bg-black text-white text-sm font-medium py-2.5 rounded-xl", allowedContent: "hidden" }} />
-              </div>
-              <p className="text-[11px] text-gray-400 mt-2 text-center">PDF only, max 4MB</p>
+              ) : (
+                <div className="border border-dashed border-gray-300 rounded-xl p-8 text-center mb-4 bg-gray-50/50">
+                  <FileText className="mx-auto text-gray-300 mb-2" />
+                  <p className="text-xs text-gray-400">No CV yet — upload PDF</p>
+                </div>
+              )}
+              <label className={`block w-full text-center text-white text-sm font-medium py-2.5 rounded-xl cursor-pointer ${isCV_missing? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-gray-900 hover:bg-black'}`}>
+                {pdfToShow? "Replace CV (PDF)" : "Choose CV (PDF)"}
+                <input type="file" accept="application/pdf" className="hidden" onChange={handleResumeChange} />
+              </label>
             </div>
           </div>
 
-          <div className="bg-white rounded-[20px] border border-gray-100 p-5 md:p-8 shadow-sm">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
-              <div><label className="text-xs font-semibold text-gray-700 uppercase">First Name</label><input value={form.firstName} onChange={e => setForm({...form, firstName: e.target.value })} className="mt-2 w-full border border-gray-200 rounded-xl px-4 py-3 text-sm bg-gray-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition" /></div>
-              <div><label className="text-xs font-semibold text-gray-700 uppercase">Last Name</label><input value={form.lastName} onChange={e => setForm({...form, lastName: e.target.value })} className="mt-2 w-full border border-gray-200 rounded-xl px-4 py-3 text-sm bg-gray-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition" /></div>
-              <div className="sm:col-span-2"><label className="text-xs font-semibold text-gray-700 uppercase flex items-center gap-1.5"><Briefcase size={14} /> Headline</label><input placeholder="e.g. MERN Stack Developer | Open to remote" value={form.headline} onChange={e => setForm({...form, headline: e.target.value })} className="mt-2 w-full border border-gray-200 rounded-xl px-4 py-3 text-sm bg-gray-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition" /></div>
-              <div><label className="text-xs font-semibold text-gray-700 uppercase flex items-center gap-1.5"><Phone size={14} /> Phone</label><input value={form.phone} onChange={e => setForm({...form, phone: e.target.value })} className="mt-2 w-full border border-gray-200 rounded-xl px-4 py-3 text-sm bg-gray-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition" /></div>
-              <div><label className="text-xs font-semibold text-gray-700 uppercase flex items-center gap-1.5"><MapPin size={14} /> Location</label><input value={form.location} onChange={e => setForm({...form, location: e.target.value })} className="mt-2 w-full border border-gray-200 rounded-xl px-4 py-3 text-sm bg-gray-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition" /></div>
-              <div className="sm:col-span-2"><label className="text-xs font-semibold text-gray-700 uppercase">Bio</label><textarea rows={4} value={form.bio} onChange={e => setForm({...form, bio: e.target.value })} className="mt-2 w-full border border-gray-200 rounded-xl px-4 py-3 text-sm bg-gray-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none resize-none transition" /></div>
+          {/* RIGHT - Form */}
+          <div className="bg-white rounded-[20px] border border-gray-100 p-4 sm:p-5 md:p-8 shadow-sm order-1 lg:order-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div><label className="text-[11px] font-semibold uppercase">First Name *</label><input value={form.firstName} onChange={e => setForm({...form, firstName: e.target.value })} className="mt-2 w-full border rounded-xl px-4 py-3 text-sm bg-gray-50/50" /></div>
+              <div><label className="text-[11px] font-semibold uppercase">Last Name *</label><input value={form.lastName} onChange={e => setForm({...form, lastName: e.target.value })} className="mt-2 w-full border rounded-xl px-4 py-3 text-sm bg-gray-50/50" /></div>
+              <div className="sm:col-span-2"><label className="text-[11px] font-semibold uppercase flex items-center gap-1.5"><Briefcase size={14} /> Headline</label><input value={form.headline} onChange={e => setForm({...form, headline: e.target.value })} className="mt-2 w-full border rounded-xl px-4 py-3 text-sm bg-gray-50/50" /></div>
+              <div><label className="text-[11px] font-semibold uppercase flex items-center gap-1.5"><Phone size={14} /> Phone</label><input value={form.phone} onChange={e => setForm({...form, phone: e.target.value })} className="mt-2 w-full border rounded-xl px-4 py-3 text-sm bg-gray-50/50" /></div>
+              <div><label className="text-[11px] font-semibold uppercase flex items-center gap-1.5"><MapPin size={14} /> Location</label><input value={form.location} onChange={e => setForm({...form, location: e.target.value })} className="mt-2 w-full border rounded-xl px-4 py-3 text-sm bg-gray-50/50" /></div>
+              <div className="sm:col-span-2"><label className="text-[11px] font-semibold uppercase">Bio</label><textarea rows={4} value={form.bio} onChange={e => setForm({...form, bio: e.target.value })} className="mt-2 w-full border rounded-xl px-4 py-3 text-sm bg-gray-50/50 resize-none" /></div>
               <div className="sm:col-span-2">
-                <label className="text-xs font-semibold text-gray-700 uppercase">Skills</label>
-                <div className="flex gap-2 mt-2"><input value={skillInput} onChange={e => setSkillInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSkill())} placeholder="Add skill and press Enter" className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm bg-gray-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition" /><button onClick={addSkill} className="bg-blue-600 text-white px-6 rounded-xl text-sm font-semibold">Add</button></div>
-                <div className="flex flex-wrap gap-2 mt-4">{form.skills.map((s, i) => <span key={i} className="bg-blue-50 text-blue-700 border border-blue-200/70 px-3.5 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5">{s} <X size={14} className="cursor-pointer hover:text-red-600 bg-white rounded-full p-0.5" onClick={() => setForm({...form, skills: form.skills.filter((_, idx) => idx!== i) })} /></span>)}</div>
+                <label className="text-[11px] font-semibold uppercase">Skills</label>
+                <div className="flex gap-2 mt-2"><input value={skillInput} onChange={e => setSkillInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSkill())} placeholder="Add skill + Enter" className="flex-1 border rounded-xl px-4 py-3 text-sm bg-gray-50/50" /><button type="button" onClick={addSkill} className="bg-blue-600 text-white px-6 rounded-xl text-sm font-semibold">Add</button></div>
+                <div className="flex flex-wrap gap-2 mt-4">{form.skills.map((s, i) => <span key={i} className="bg-blue-50 text-blue-700 border px-3.5 py-1.5 rounded-full text-xs flex items-center gap-1.5">{s} <X size={14} className="cursor-pointer" onClick={() => setForm({...form, skills: form.skills.filter((_, idx) => idx!== i) })} /></span>)}</div>
               </div>
             </div>
-            <button disabled={isUpdating} onClick={handleSave} className="mt-8 w-full bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98]">
-              {isUpdating? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}{isUpdating? "Saving..." : isFromJob? "Save & Apply to Job" : "Save Profile"}
+
+            <button disabled={isDisabled} onClick={handleSave} className={`mt-6 w-full font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-sm transition ${isCV_missing? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90"}`}>
+              {isBusy? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />} {isCV_missing? "Upload CV to Save" : isBusy? "Uploading..." : "Save Profile"}
             </button>
+            {isCV_missing && <p className="text-[11px] text-amber-600 mt-2 text-center flex items-center justify-center gap-1"><AlertCircle size={12} /> CV is required</p>}
           </div>
         </div>
+
+        {/* OUTSIDE - CLEAR PROFILE SEPARATE FULL WIDTH CARD - MOBILE RESPONSIVE */}
+        {hasProfileData && (
+          <div className="w-full max-w-full mt-6 bg-white rounded-[20px] border border-red-200 p-4 sm:p-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-bold text-red-600 flex items-center gap-2"><Trash2 size={16}/> Clear Profile Data</h3>
+                <p className="text-xs text-gray-500 mt-1">Delete photo, CV, and all fields. Your login stays, you can create new profile again.</p>
+              </div>
+              <button onClick={() => setShowDelete(true)} className="w-full sm:w-auto shrink-0 bg-red-500 hover:bg-red-600 text-white text-sm font-medium px-6 py-2.5 rounded-xl flex items-center justify-center gap-2">
+                <Trash2 size={14}/> Clear My Profile
+              </button>
+            </div>
+          </div>
+        )}
       </main>
+
+      {showDelete && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
+            <h4 className="font-bold text-gray-900">Clear profile data?</h4>
+            <p className="text-xs text-gray-600 mt-2">This will delete your photo, CV, and fields from DB and UploadThing. Login will stay.</p>
+            <div className="flex gap-2 mt-5">
+              <button onClick={() => setShowDelete(false)} className="flex-1 border rounded-xl py-2.5 text-sm">Cancel</button>
+              <button disabled={isDeleting} onClick={handleClear} className="flex-1 bg-red-600 hover:bg-red-700 text-white rounded-xl py-2.5 text-sm flex items-center justify-center gap-2">
+                {isDeleting? <Loader2 size={16} className="animate-spin"/> : <Trash2 size={16}/>} Clear
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
 export default function ProfilePage() {
-  return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={32} /></div>}>
-      <ProfileForm />
-    </Suspense>
-  );
+  return <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={32} /></div>}><ProfileForm /></Suspense>;
 }

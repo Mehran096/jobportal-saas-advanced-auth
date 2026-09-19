@@ -12,7 +12,7 @@ import {
   useUnsaveJobMutation,
 } from "@/lib/redux/api/jobseekerApi";
 import { useGetProfileQuery } from "@/lib/redux/api/profileApi";
-import { ArrowLeft, Building, MapPin, DollarSign, Calendar, Users, Loader2, Bookmark, BookmarkCheck, FileText } from "lucide-react";
+import { ArrowLeft, Building, MapPin, Calendar, Users, Loader2, Bookmark, BookmarkCheck, FileText } from "lucide-react";
 import toast from "react-hot-toast";
 import DashboardHeader from "@/app/components/DashboardHeader";
  
