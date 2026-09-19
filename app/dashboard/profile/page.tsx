@@ -112,20 +112,20 @@ function ProfileForm() {
   const isBusy = isUpdating || isImgUp || isResUp;
   const isDisabled = isBusy || isCV_missing;
   const pdfToShow = pdfPreviewLocal || form.resumeUrl;
+  // show delete only if profile has data
   const hasProfileData =!!(profile?.firstName || profile?.profileImage || profile?.resumeUrl);
 
   return (
     <div className="min-h-screen bg-[#f8fafc]">
       <DashboardHeader />
-      <main className="w-full max-w-6xl mx-auto p-3 sm:p-4 md:p-8">
+      <main className="w-full max-w-6xl mx-auto p-3 sm:p-4 md:p-8 overflow-x-hidden">
         <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-600 to-indigo-600 text-white rounded-[20px] p-5 md:p-8 mb-6 shadow-xl">
           <h1 className="text-xl md:text-3xl font-bold flex items-center gap-2"><Sparkles size={24} /> My Profile</h1>
           <p className="text-blue-100 text-xs sm:text-sm mt-2">CV is required — button disabled until upload.</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-4 sm:gap-6 items-start">
-          {/* LEFT - Photo & CV */}
-          <div className="space-y-4 sm:space-y-6 lg:sticky lg:top-24 order-2 lg:order-1">
+          <div className="space-y-4 sm:space-y-6 lg:sticky lg:top-24">
             <div className="bg-white rounded-[20px] border border-gray-100 p-5 sm:p-6 shadow-sm text-center">
               <h3 className="font-semibold text-left text-gray-900 mb-4 text-sm">Profile Photo</h3>
               <div className="w-28 h-28 sm:w-32 sm:h-32 mx-auto rounded-full bg-gray-50 overflow-hidden relative ring-4 ring-blue-50 shadow-inner">
@@ -140,34 +140,36 @@ function ProfileForm() {
                   setImageFile(f); setImagePreview(URL.createObjectURL(f));
                 }} />
               </label>
-              {imageFile && <p className="text-xs text-green-600 mt-2 truncate">{imageFile.name}</p>}
+              {imageFile && <p className="text-xs text-green-600 mt-2 truncate">{imageFile.name} - will upload on Save</p>}
             </div>
 
             <div className={`bg-white rounded-[20px] border p-5 sm:p-6 shadow-sm ${isCV_missing? 'border-yellow-200 ring-2 ring-yellow-100' : 'border-gray-100'}`}>
-              <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2 text-sm"><FileText size={18} /> Resume / CV {pdfToShow && <span className="text-green-600 text-[10px] ml-auto">● Preview</span>}</h3>
+              <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2 text-sm"><FileText size={18} /> Resume / CV {pdfToShow && <span className="text-green-600 text-[10px] ml-auto">● Preview below</span>}</h3>
               {pdfToShow? (
                 <div className="mb-4 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
-                  <iframe src={pdfToShow} className="w-full h-[400px] sm:h-[600px]" title="CV Preview" />
+                  <iframe src={pdfToShow} className="w-full h-[600px]" title="CV Preview" />
                   <div className="p-2 flex justify-between bg-white border-t text-[11px]">
                     <span className="truncate">{form.resumeName}</span>
-                    <a href={pdfToShow} target="_blank" className="text-blue-600 underline ml-2">Open full</a>
+                    <a href={pdfToShow} target="_blank" className="text-blue-600 underline shrink-0 ml-2">Open full</a>
                   </div>
                 </div>
               ) : (
                 <div className="border border-dashed border-gray-300 rounded-xl p-8 text-center mb-4 bg-gray-50/50">
                   <FileText className="mx-auto text-gray-300 mb-2" />
-                  <p className="text-xs text-gray-400">No CV yet — upload PDF</p>
+                  <p className="text-xs text-gray-400">No CV yet — upload PDF to preview here</p>
                 </div>
               )}
               <label className={`block w-full text-center text-white text-sm font-medium py-2.5 rounded-xl cursor-pointer ${isCV_missing? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-gray-900 hover:bg-black'}`}>
                 {pdfToShow? "Replace CV (PDF)" : "Choose CV (PDF)"}
                 <input type="file" accept="application/pdf" className="hidden" onChange={handleResumeChange} />
               </label>
+              {resumeFile && <p className="text-xs text-green-600 mt-2 truncate">{resumeFile.name} - will upload on Save</p>}
             </div>
+
+           
           </div>
 
-          {/* RIGHT - Form */}
-          <div className="bg-white rounded-[20px] border border-gray-100 p-4 sm:p-5 md:p-8 shadow-sm order-1 lg:order-2">
+          <div className="bg-white rounded-[20px] border border-gray-100 p-4 sm:p-5 md:p-8 shadow-sm">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div><label className="text-[11px] font-semibold uppercase">First Name *</label><input value={form.firstName} onChange={e => setForm({...form, firstName: e.target.value })} className="mt-2 w-full border rounded-xl px-4 py-3 text-sm bg-gray-50/50" /></div>
               <div><label className="text-[11px] font-semibold uppercase">Last Name *</label><input value={form.lastName} onChange={e => setForm({...form, lastName: e.target.value })} className="mt-2 w-full border rounded-xl px-4 py-3 text-sm bg-gray-50/50" /></div>
@@ -182,15 +184,14 @@ function ProfileForm() {
               </div>
             </div>
 
-            <button disabled={isDisabled} onClick={handleSave} className={`mt-6 w-full font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-sm transition ${isCV_missing? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90"}`}>
-              {isBusy? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />} {isCV_missing? "Upload CV to Save" : isBusy? "Uploading..." : "Save Profile"}
+            <button disabled={isDisabled} onClick={handleSave} title={isCV_missing? "Please upload CV first" : ""} className={`mt-6 w-full font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-sm transition ${isCV_missing? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90 disabled:opacity-50"}`}>
+              {isBusy? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />} {isCV_missing? "Upload CV to Save" : isBusy? "Uploading..." : isFromJob? "Save & Apply to Job" : "Save Profile"}
             </button>
-            {isCV_missing && <p className="text-[11px] text-amber-600 mt-2 text-center flex items-center justify-center gap-1"><AlertCircle size={12} /> CV is required</p>}
+            {isCV_missing && <p className="text-[11px] text-amber-600 mt-2 text-center flex items-center justify-center gap-1"><AlertCircle size={12} /> CV is required to save profile</p>}
           </div>
         </div>
-
-        {/* OUTSIDE - CLEAR PROFILE SEPARATE FULL WIDTH CARD - MOBILE RESPONSIVE */}
-        {hasProfileData && (
+         {/* SHOW DELETE ONLY IF USER HAS PROFILE DATA */}
+            {hasProfileData && (
           <div className="w-full max-w-full mt-6 bg-white rounded-[20px] border border-red-200 p-4 sm:p-6 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
@@ -209,10 +210,10 @@ function ProfileForm() {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
             <h4 className="font-bold text-gray-900">Clear profile data?</h4>
-            <p className="text-xs text-gray-600 mt-2">This will delete your photo, CV, and fields from DB and UploadThing. Login will stay.</p>
+            <p className="text-xs text-gray-600 mt-2">This will delete your photo, CV, and all fields from DB and UploadThing. Your account login will stay.</p>
             <div className="flex gap-2 mt-5">
               <button onClick={() => setShowDelete(false)} className="flex-1 border rounded-xl py-2.5 text-sm">Cancel</button>
-              <button disabled={isDeleting} onClick={handleClear} className="flex-1 bg-red-600 hover:bg-red-700 text-white rounded-xl py-2.5 text-sm flex items-center justify-center gap-2">
+              <button disabled={isDeleting} onClick={handleClear} className="flex-1 bg-orange-600 hover:bg-orange-700 text-white rounded-xl py-2.5 text-sm flex items-center justify-center gap-2">
                 {isDeleting? <Loader2 size={16} className="animate-spin"/> : <Trash2 size={16}/>} Clear
               </button>
             </div>
