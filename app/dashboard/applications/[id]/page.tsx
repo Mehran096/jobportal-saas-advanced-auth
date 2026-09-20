@@ -1,4 +1,6 @@
 "use client";
+export const dynamic = 'force-dynamic';
+
 import { useParams, useRouter } from "next/navigation";
 import DashboardHeader from "@/app/components/DashboardHeader";
 import { useGetApplicationByIdQuery } from "@/lib/redux/api/employerApi";
