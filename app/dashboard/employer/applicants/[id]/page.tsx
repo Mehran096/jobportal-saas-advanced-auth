@@ -50,24 +50,24 @@ export default function ApplicantDetailPage() {
           <ArrowLeft size={16} /> Back to Applicants
         </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* LEFT: Profile */}
-          <div className="bg-white rounded-xl border p-6 h-fit">
+          <div className="lg:col-span-5 bg-white rounded-xl border p-6 h-fit">
             <div className="flex gap-4">
               <Image src={s.profileImage || `https://ui-avatars.com/api/?name=${s.firstName}+${s.lastName}`} width={64} height={64} unoptimized alt="avatar" className="w-16 h-16 rounded-full object-cover" />
               <div className="min-w-0">
-                <h1 className="text-xl font-bold truncate">{s.firstName} {s.lastName}</h1>
-                <p className="text-blue-600 text-sm font-medium wrap-break-word">{s.headline || "No headline"}</p>
-                <p className="text-xs text-gray-500 mt-1">Applied for: <b>{job?.title || app.job?.title}</b></p>
+                <h1 className="text-xl font-bold wrap-break-word">{s.firstName} {s.lastName}</h1>
+                <p className="text-blue-600 text-sm font-medium wrap-break-word leading-snug">{s.headline || "No headline"}</p>
+                <p className="text-xs text-gray-500 mt-1 wrap-break-word">Applied for: <b>{job?.title || app.job?.title}</b></p>
               </div>
             </div>
 
-            <p className="text-sm text-gray-600 mt-4 leading-relaxed whitespace-pre-wrap">{s.bio || "No bio"}</p>
+            <p className="text-sm text-gray-600 mt-4 leading-relaxed whitespace-pre-wrap wrap-break-word">{s.bio || "No bio"}</p>
 
             <div className="mt-5 space-y-2 text-sm text-gray-700">
-              <p className="flex gap-2 items-center truncate"><Mail size={16} className="shrink-0" /> <span className="truncate">{s.email}</span></p>
+              <p className="flex gap-2 items-center"><Mail size={16} className="shrink-0" /> <span className="wrap-break-word">{s.email}</span></p>
               <p className="flex gap-2 items-center"><Phone size={16} className="shrink-0" /> {s.phone || "No phone"}</p>
-              <p className="flex gap-2 items-center truncate"><MapPin size={16} className="shrink-0" /> <span className="truncate">{s.location || "No location"}</span></p>
+              <p className="flex gap-2 items-center"><MapPin size={16} className="shrink-0" /> <span className="wrap-break-word">{s.location || "No location"}</span></p>
             </div>
 
             <div className="mt-5">
@@ -108,16 +108,48 @@ export default function ApplicantDetailPage() {
             )}
           </div>
 
-          {/* RIGHT: CV Preview */}
-          <div className="lg:col-span-2 bg-white rounded-xl border overflow-hidden h-[85vh] flex flex-col">
+          {/* RIGHT: CV Preview - DESKTOP + MOBILE */}
+          <div className="lg:col-span-7 bg-white rounded-xl border overflow-hidden lg:h-[85vh] flex flex-col">
             <div className="p-3 border-b bg-gray-50 flex justify-between items-center">
-              <h2 className="font-semibold text-sm">CV Preview - {job?.title}</h2>
+              <h2 className="font-semibold text-sm truncate max-w-[70%]">CV Preview - {job?.title || app.job?.title}</h2>
               <span className="text-xs capitalize px-2 py-1 rounded-full bg-yellow-100 font-medium">{app.status}</span>
             </div>
+
             {s.resumeUrl? (
-              <iframe src={s.resumeUrl} className="w-full flex-1" title="CV Preview" />
+              <>
+                {/* DESKTOP */}
+                <div className="hidden sm:block flex-1">
+                  <iframe src={s.resumeUrl} className="w-full h-full min-h-[650px]" title="CV Preview" />
+                </div>
+
+                {/* MOBILE - REAL PREVIEW with Google Docs Viewer */}
+                <div className="sm:hidden">
+                  {s.resumeUrl.startsWith("blob:")? (
+                    <object data={s.resumeUrl} type="application/pdf" className="w-full h-[70vh]">
+                      <div className="p-8 text-center">
+                        <div className="w-16 h-16 mx-auto bg-red-50 rounded-xl flex items-center justify-center mb-3">
+                          <FileText className="text-red-500" size={32} />
+                        </div>
+                        <p className="text-xs font-medium">{s.resumeName || "resume.pdf"}</p>
+                        <p className="text-[10px] text-gray-400 mt-1">Preview after Save, tap Open for now</p>
+                        <a href={s.resumeUrl} target="_blank" className="mt-3 inline-block bg-blue-600 text-white text-xs px-4 py-2 rounded-xl">Open PDF</a>
+                      </div>
+                    </object>
+                  ) : (
+                    <iframe
+                      src={`https://docs.google.com/gview?url=${encodeURIComponent(s.resumeUrl)}&embedded=true`}
+                      className="w-full h-[70vh] bg-white"
+                      title="CV Preview Mobile"
+                    />
+                  )}
+                  <div className="p-2 flex gap-2 bg-white border-t">
+                    <a href={s.resumeUrl} target="_blank" rel="noopener noreferrer" className="flex-1 bg-blue-600 text-white text-xs font-medium py-2.5 rounded-xl text-center">Open PDF</a>
+                    <div className="flex-1 bg-gray-100 text-gray-700 text-[10px] py-2.5 rounded-xl text-center truncate px-1">{s.resumeName || "CV.pdf"}</div>
+                  </div>
+                </div>
+              </>
             ) : (
-              <div className="flex-1 flex items-center justify-center text-sm text-gray-400">No CV uploaded</div>
+              <div className="flex-1 flex items-center justify-center text-sm text-gray-400 p-10">No CV uploaded</div>
             )}
           </div>
         </div>
