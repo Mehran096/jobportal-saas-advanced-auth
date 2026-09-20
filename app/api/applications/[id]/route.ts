@@ -31,28 +31,30 @@ type ValidStatus = "pending" | "shortlisted" | "accepted" | "rejected";
 const FINAL_STATUSES: ValidStatus[] = ["accepted", "rejected", "shortlisted"];
 const VALID_STATUSES: ValidStatus[] = ["pending", "shortlisted", "accepted", "rejected"];
 
-// --- NEW: GET FOR YOUR FULL DETAILS PAGE ---
+// --- GET FOR BOTH: Employer Full Profile + Jobseeker My Application ---
 export async function GET(req: NextRequest, { params }: Params) {
   try {
     await dbConnect();
     const { id } = await params;
-    const user = await verifyToken(req) as unknown as { id: string; role: string };
+    const user = (await verifyToken(req)) as unknown as { id: string; role: string; _id?: string };
 
-    if (user.role !== "employer") {
-      return NextResponse.json({ message: "Only employers can view" }, { status: 403 });
+    const userId = user.id || user._id;
+    if (!userId) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
     type LeanApplication = {
       _id: Types.ObjectId;
       job: PopulatedJob;
       employer: Types.ObjectId;
-      applicant: Types.ObjectId;
+      applicant: Types.ObjectId | PopulatedApplicant;
       status: ValidStatus;
       snapshot: Snapshot & { email?: string };
     };
 
     const application = (await Application.findById(id)
       .populate<{ job: PopulatedJob }>("job", "title company location type postedBy")
+      .populate<{ applicant: PopulatedApplicant }>("applicant", "firstName lastName email")
       .lean()) as unknown as LeanApplication | null;
 
     if (!application) {
@@ -60,18 +62,37 @@ export async function GET(req: NextRequest, { params }: Params) {
     }
 
     const job = application.job as unknown as PopulatedJob;
-
-    if (!job || !job.postedBy) {
+    if (!job) {
       return NextResponse.json({ message: "Job not found" }, { status: 404 });
     }
 
-    if (job.postedBy.toString() !== user.id) {
-      return NextResponse.json({ message: "Forbidden: Not your job" }, { status: 403 });
+    // --- JOBSEEKER: can view own application ---
+    if (user.role === "jobseeker") {
+      const applicantId = (application.applicant as PopulatedApplicant)?._id 
+        ? (application.applicant as PopulatedApplicant)._id.toString()
+        : (application.applicant as Types.ObjectId).toString();
+
+      if (applicantId !== userId.toString()) {
+        return NextResponse.json({ message: "Forbidden: Not your application" }, { status: 403 });
+      }
+      return NextResponse.json({ application, job }, { status: 200 });
     }
 
-    return NextResponse.json({ application, job }, { status: 200 });
+    // --- EMPLOYER: can view if job posted by him ---
+    if (user.role === "employer") {
+      if (!job.postedBy) {
+        return NextResponse.json({ message: "Job owner not found" }, { status: 404 });
+      }
+      if (job.postedBy.toString() !== userId.toString()) {
+        return NextResponse.json({ message: "Forbidden: Not your job" }, { status: 403 });
+      }
+      return NextResponse.json({ application, job }, { status: 200 });
+    }
+
+    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Server error";
+    console.error("GET Application Error:", error);
     return NextResponse.json({ message }, { status: 500 });
   }
 }
@@ -151,7 +172,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         await Notification.create({
           user: applicantId,
           message: `Your application for "${job.title}" was ${status}`,
-          link: `/dashboard/applications`,
+          link: `/dashboard/applications/${id}`,
         });
       }
     }

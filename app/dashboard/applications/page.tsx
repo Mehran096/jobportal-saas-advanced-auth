@@ -23,17 +23,20 @@ const AppSkeleton = () => (
 );
 
 const StatusBadge = ({ status }: { status: Application['status'] }) => {
-  const config: any = {
-    pending: { icon: <Clock size={14} />, text: "Pending", class: "bg-yellow-100 text-yellow-700 border-yellow-200" },
-    reviewed: { icon: <Eye size={14} />, text: "Reviewed", class: "bg-blue-100 text-blue-700 border-blue-200" },
-    shortlisted: { icon: <Star size={14} />, text: "Shortlisted", class: "bg-purple-100 text-purple-700 border-purple-200" },
-    accepted: { icon: <CheckCircle2 size={14} />, text: "Accepted", class: "bg-green-100 text-green-700 border-green-200" },
-    rejected: { icon: <XCircle size={14} />, text: "Rejected", class: "bg-red-100 text-red-700 border-red-200" },
-  }[status] || { icon: <Clock size={14} />, text: status, class: "bg-gray-100 text-gray-700" };
+  const map = {
+    pending: { icon: Clock, text: "Pending", class: "bg-yellow-100 text-yellow-700 border-yellow-200" },
+    reviewed: { icon: Eye, text: "Reviewed", class: "bg-blue-100 text-blue-700 border-blue-200" },
+    shortlisted: { icon: Star, text: "Shortlisted", class: "bg-purple-100 text-purple-700 border-purple-200" },
+    accepted: { icon: CheckCircle2, text: "Accepted", class: "bg-green-100 text-green-700 border-green-200" },
+    rejected: { icon: XCircle, text: "Rejected", class: "bg-red-100 text-red-700 border-red-200" },
+  } as const;
+
+  const cfg = map[status as keyof typeof map] || map.pending;
+  const Icon = cfg.icon;
 
   return (
-    <span className={`px-3 py-1 rounded-full text-sm font-semibold capitalize flex items-center gap-1.5 border ${config.class}`}>
-      {config.icon} {config.text}
+    <span className={`px-3 py-1 rounded-full text-sm font-semibold capitalize flex items-center gap-1.5 border ${cfg.class}`}>
+      <Icon size={14} /> {cfg.text}
     </span>
   );
 };
@@ -45,20 +48,26 @@ const formatDate = (dateString?: string) => {
   return date.toLocaleDateString("en-PK", { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
+type MyApplicationsResponse = { applications: Application[] };
+
 export default function ApplicationsPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const user = session?.user as any;
+  const user = session?.user as { role?: string } | undefined;
   const userLoading = status === "loading";
 
   const { data: applicationsData, isLoading: appsLoading } = useGetMyApplicationsQuery(undefined, {
     skip:!user || user?.role!== "jobseeker"
   });
 
-  // FIXED: handles both array and {applications: []}
-  const applications: Application[] = Array.isArray(applicationsData)
-   ? applicationsData as Application[]
-    : (applicationsData as any)?.applications || [];
+  const applications: Application[] = (() => {
+  if (!applicationsData) return [];
+  if (Array.isArray(applicationsData)) return applicationsData as Application[];
+  if (typeof applicationsData === 'object' && 'applications' in applicationsData) {
+    return (applicationsData as MyApplicationsResponse).applications || [];
+  }
+  return [];
+})();
 
   const isLoading = userLoading || appsLoading;
 
@@ -81,7 +90,6 @@ export default function ApplicationsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <DashboardHeader />
-
       <main className="max-w-4xl mx-auto p-4 sm:p-6 pb-24 md:pb-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold">My Applications</h1>
@@ -103,11 +111,11 @@ export default function ApplicationsPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {applications.map((app: any) => (
-              <div key={app._id} className="bg-white p-5 rounded-xl shadow border hover:shadow-md transition">
+            {applications.map((app) => (
+              <Link key={app._id} href={`/dashboard/applications/${app._id}`} className="block bg-white p-5 rounded-xl shadow border hover:shadow-md transition cursor-pointer">
                 <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg">{app.job?.title || "Job"}</h3>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-lg truncate">{app.job?.title || "Job"}</h3>
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-gray-600 text-sm mt-1">
                       <span className="flex items-center gap-1.5"><Building2 size={14} /> {app.job?.company || app.job?.title}</span>
                       <span className="flex items-center gap-1.5"><Calendar size={14} /> Applied: {formatDate(app.createdAt)}</span>
@@ -115,16 +123,11 @@ export default function ApplicationsPage() {
                   </div>
                   <StatusBadge status={app.status} />
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
       </main>
-
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2">
-        <Link href="/dashboard/jobs" className="text-gray-500 text-xs flex flex-col items-center"><Briefcase size={20}/>Jobs</Link>
-        <Link href="/dashboard/applications" className="text-blue-600 text-xs flex flex-col items-center"><Briefcase size={20}/>Applications</Link>
-      </nav>
     </div>
   );
 }
