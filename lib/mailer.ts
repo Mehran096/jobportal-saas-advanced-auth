@@ -9,17 +9,39 @@ const transporter = nodemailer.createTransport({
 });
 
 export async function sendStatusEmail(to: string, fullName: string, jobTitle: string, status: string) {
-  const isAccepted = status === "accepted";
   
-  const subject = isAccepted 
-    ? `Congratulations! Your Application for ${jobTitle} was Accepted` 
-    : `Update on Your Application for ${jobTitle}`;
+  let subject = "";
+  let statusText = "";
+  let statusColor = "";
+  let nextStep = "";
 
-  const statusColor = isAccepted ? "#16a34a" : "#dc2626";
-  const statusText = isAccepted ? "Accepted" : "Not Selected";
-  const nextStep = isAccepted 
-    ? "The employer will contact you soon with the next steps. Please keep an eye on your inbox."
-    : "We encourage you to keep applying. A better opportunity might be waiting for you.";
+  switch (status) {
+    case "shortlisted":
+      subject = `Great news! You were shortlisted for ${jobTitle}`;
+      statusText = "Shortlisted";
+      statusColor = "#2563eb"; // Blue
+      nextStep = "Congratulations! The employer has shortlisted your profile. They will contact you soon for an interview. Good luck!";
+      break;
+    case "accepted":
+      subject = `Congratulations! Your Application for ${jobTitle} was Accepted`;
+      statusText = "Accepted";
+      statusColor = "#16a34a"; // Green
+      nextStep = "The employer will contact you soon with the next steps. Please keep an eye on your inbox.";
+      break;
+    case "rejected":
+      subject = `Update on Your Application for ${jobTitle}`;
+      statusText = "Not Selected";
+      statusColor = "#dc2626"; // Red
+      nextStep = "We encourage you to keep applying. A better opportunity might be waiting for you.";
+      break;
+    case "pending":
+    default:
+      subject = `Update on Your Application for ${jobTitle}`;
+      statusText = "Under Review";
+      statusColor = "#f59e0b"; // Orange
+      nextStep = "Your application is currently under review by the employer. We will notify you once there is an update.";
+      break;
+  }
 
   const html = `
     <!DOCTYPE html>
@@ -31,7 +53,7 @@ export async function sendStatusEmail(to: string, fullName: string, jobTitle: st
         .header { background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); padding: 30px; text-align: center; }
         .header h1 { color: #fff; margin: 0; }
         .content { padding: 30px; color: #18181b; }
-        .status-badge { display: inline-block; padding: 8px 16px; border-radius: 20px; font-weight: 600; color: #fff; background-color: ${statusColor}; margin: 15px 0; }
+        .status-badge { display: inline-block; padding: 8px 16px; border-radius: 20px; font-weight: 600; color: #fff; background-color: ${statusColor}; margin: 15px 0; text-transform: capitalize; }
         .job-card { background: #f8fafc; border-left: 4px solid #2563eb; padding: 15px; margin: 20px 0; border-radius: 4px; }
         .footer { background: #f8fafc; padding: 20px; text-align: center; font-size: 12px; color: #71717a; border-top: 1px solid #e4e4e7; }
       </style>
