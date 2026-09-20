@@ -28,9 +28,55 @@ interface Snapshot {
 }
 
 type ValidStatus = "pending" | "shortlisted" | "accepted" | "rejected";
-
 const FINAL_STATUSES: ValidStatus[] = ["accepted", "rejected", "shortlisted"];
+const VALID_STATUSES: ValidStatus[] = ["pending", "shortlisted", "accepted", "rejected"];
 
+// --- NEW: GET FOR YOUR FULL DETAILS PAGE ---
+export async function GET(req: NextRequest, { params }: Params) {
+  try {
+    await dbConnect();
+    const { id } = await params;
+    const user = await verifyToken(req) as unknown as { id: string; role: string };
+
+    if (user.role !== "employer") {
+      return NextResponse.json({ message: "Only employers can view" }, { status: 403 });
+    }
+
+    type LeanApplication = {
+      _id: Types.ObjectId;
+      job: PopulatedJob;
+      employer: Types.ObjectId;
+      applicant: Types.ObjectId;
+      status: ValidStatus;
+      snapshot: Snapshot & { email?: string };
+    };
+
+    const application = (await Application.findById(id)
+      .populate<{ job: PopulatedJob }>("job", "title company location type postedBy")
+      .lean()) as unknown as LeanApplication | null;
+
+    if (!application) {
+      return NextResponse.json({ message: "Application not found" }, { status: 404 });
+    }
+
+    const job = application.job as unknown as PopulatedJob;
+
+    if (!job || !job.postedBy) {
+      return NextResponse.json({ message: "Job not found" }, { status: 404 });
+    }
+
+    if (job.postedBy.toString() !== user.id) {
+      return NextResponse.json({ message: "Forbidden: Not your job" }, { status: 403 });
+    }
+
+    return NextResponse.json({ application, job }, { status: 200 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Server error";
+    return NextResponse.json({ message }, { status: 500 });
+  }
+}
+
+// --- YOUR PATCH (UPGRADED WITH SHORTLIST EMAIL) ---
 export async function PATCH(req: NextRequest, { params }: Params) {
   try {
     await dbConnect();
@@ -38,7 +84,6 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     const body = (await req.json()) as { status?: ValidStatus };
     const { status } = body;
 
-    const VALID_STATUSES: ValidStatus[] = ["pending", "shortlisted", "accepted", "rejected"];
     if (!status || !VALID_STATUSES.includes(status)) {
       return NextResponse.json({ message: "Invalid status" }, { status: 400 });
     }
@@ -68,7 +113,6 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       return NextResponse.json({ message: "Forbidden: Not your job" }, { status: 403 });
     }
 
-    // 1. BLOCK if already in final status
     if (FINAL_STATUSES.includes(application.status as ValidStatus)) {
       return NextResponse.json(
         { message: `Already ${application.status}. Cannot change status again.` },
@@ -76,17 +120,14 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       );
     }
 
-    // 2. BLOCK if same status again
     if (application.status === status) {
-      return NextResponse.json(
-        { message: `Already ${status}` },
-        { status: 400 }
-      );
+      return NextResponse.json({ message: `Already ${status}` }, { status: 400 });
     }
 
     application.status = status;
     await application.save();
 
+    // SEND EMAIL + NOTIFICATION FOR FINAL STATUSES (now includes shortlisted!)
     if (FINAL_STATUSES.includes(status)) {
       const applicant = application.applicant as unknown as PopulatedApplicant | null;
       const snapshot = (application as unknown as { snapshot?: Snapshot }).snapshot ?? {};
@@ -101,8 +142,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         try {
           await sendStatusEmail(email, fullName, job.title, status);
         } catch (mailErr: unknown) {
-          const errMsg = mailErr instanceof Error ? mailErr.message : "Unknown mail error";
-          console.error("Email failed:", errMsg);
+          console.error("Email failed:", mailErr);
         }
       }
 
