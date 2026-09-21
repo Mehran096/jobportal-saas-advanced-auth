@@ -1,8 +1,15 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { NextResponse, NextRequest } from "next/server";
 import dbConnect from "@/lib/db";
-import Application from "@/models/Application";
 import { verifyToken } from "@/lib/auth";
 import { sendStatusEmail } from "@/lib/mailer";
+
+// CRITICAL for Vercel — keep these
+import "@/models/Job";
+import "@/models/User";
+import Application from "@/models/Application";
 import Notification from "@/models/Notification";
 import { Types } from "mongoose";
 
