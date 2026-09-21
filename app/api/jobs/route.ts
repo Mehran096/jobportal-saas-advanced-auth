@@ -1,7 +1,13 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { NextResponse, NextRequest } from "next/server";
 import dbConnect from "@/lib/db";
-import Job from "@/models/Job";
 import { verifyToken } from "@/lib/auth";
+
+// keep models registered for populate
+import "@/models/User";
+import Job from "@/models/Job";
 
 type RegexFilter = { $regex: string; $options: string };
 
@@ -17,16 +23,35 @@ type JobFilter = {
   }>;
 };
 
+interface VerifiedUser {
+  id: string;
+  role: string;
+}
+
+interface JobBody {
+  title?: string;
+  description?: string;
+  company?: string;
+  location?: string;
+  salary?: string | number;
+  type?: string;
+  salaryMin?: string | number;
+  salaryMax?: string | number;
+}
+
 export async function POST(req: NextRequest) {
   try {
     await dbConnect();
-    const user = await verifyToken(req);
+    const user = (await verifyToken(req)) as VerifiedUser;
 
     if (user.role !== "employer") {
-      return NextResponse.json({ message: "Only employers can post jobs" }, { status: 403 });
+      return NextResponse.json(
+        { message: "Only employers can post jobs" },
+        { status: 403 }
+      );
     }
 
-    const body = await req.json();
+    const body = (await req.json()) as JobBody;
     const { title, description, company, location, salary, type, salaryMin, salaryMax } = body;
 
     if (!title || !description || !company || !location || !salary) {
@@ -39,16 +64,28 @@ export async function POST(req: NextRequest) {
       company,
       location,
       salary: Number(salary),
-      type: type || "Full-time", // <-- FIXED: fallback to default
+      type: type || "Full-time",
       salaryMin: salaryMin ? Number(salaryMin) : undefined,
       salaryMax: salaryMax ? Number(salaryMax) : undefined,
       postedBy: user.id,
     });
 
-    return NextResponse.json({ message: "Job posted successfully", job: newJob }, { status: 201 });
+    return NextResponse.json(
+      { message: "Job posted successfully", job: newJob },
+      { status: 201, headers: { "Cache-Control": "no-store" } }
+    );
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Server error";
-    return NextResponse.json({ message }, { status: 401 });
+    // FIX: was 401 — now distinguish
+    const isAuthError = message.toLowerCase().includes("token") || 
+                        message.toLowerCase().includes("unauthorized") ||
+                        message.toLowerCase().includes("jwt");
+    
+    console.error("POST jobs error:", message);
+    return NextResponse.json(
+      { message },
+      { status: isAuthError ? 401 : 500 }
+    );
   }
 }
 
@@ -78,7 +115,10 @@ export async function GET(req: NextRequest) {
     }
 
     if (minSalary) {
-      filter.salary = { $gte: Number(minSalary) };
+      const parsed = Number(minSalary);
+      if (!Number.isNaN(parsed)) {
+        filter.salary = { $gte: parsed };
+      }
     }
 
     if (datePosted) {
@@ -88,6 +128,7 @@ export async function GET(req: NextRequest) {
       else if (datePosted === "3d") fromDate.setDate(now.getDate() - 3);
       else if (datePosted === "7d") fromDate.setDate(now.getDate() - 7);
       else if (datePosted === "14d") fromDate.setDate(now.getDate() - 14);
+      else fromDate.setDate(now.getDate() - 30);
       filter.createdAt = { $gte: fromDate };
     }
 
@@ -96,9 +137,19 @@ export async function GET(req: NextRequest) {
       .sort({ createdAt: -1 })
       .lean();
 
-    return NextResponse.json({ count: jobs.length, jobs }, { status: 200 });
+    return NextResponse.json(
+      { count: jobs.length, jobs },
+      {
+        status: 200,
+        headers: { "Cache-Control": "no-store, no-cache, must-revalidate" },
+      }
+    );
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Server error";
-    return NextResponse.json({ message }, { status: 500 });
+    console.error("GET jobs error:", message);
+    return NextResponse.json(
+      { message, count: 0, jobs: [] },
+      { status: 500, headers: { "Cache-Control": "no-store" } }
+    );
   }
 }
