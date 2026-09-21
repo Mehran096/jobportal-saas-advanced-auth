@@ -1,11 +1,19 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { NextResponse, NextRequest } from "next/server";
 import dbConnect from "@/lib/db";
+import { verifyToken } from "@/lib/auth";
+import mongoose from "mongoose";
+
+// keep models registered
+import "@/models/Job";
+import "@/models/User";
+import "@/models/Profile";
 import Application from "@/models/Application";
 import Job from "@/models/Job";
 import User from "@/models/User";
 import Profile from "@/models/Profile";
-import { verifyToken } from "@/lib/auth";
-import mongoose from "mongoose";
 
 export async function POST(req: NextRequest) {
   try {
@@ -27,7 +35,7 @@ export async function POST(req: NextRequest) {
     const [user, profile, jobDoc] = await Promise.all([
       User.findById(userToken.id),
       Profile.findOne({ user: userToken.id }),
-      Job.findById(job),
+      Job.findById(job).lean(),
     ]);
 
     if (!user || !jobDoc) {
