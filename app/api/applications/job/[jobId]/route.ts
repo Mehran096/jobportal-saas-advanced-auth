@@ -6,6 +6,8 @@ import { verifyToken } from "@/lib/auth";
 
 type Params = { params: Promise<{ jobId: string }> };
 
+//single job applicant/jobSeeker's single application for a job /employer can view single job's
+export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest, { params }: Params) {
   try {
     await dbConnect();

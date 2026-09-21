@@ -1,21 +1,22 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document, Model } from "mongoose";
 
 export interface IUser extends Document {
   firstName: string;
   lastName: string;
-  name: string; // virtual
   email: string;
   password?: string;
   role: "jobseeker" | "employer" | "admin";
-  provider?: string; // <- ADD
-  image?: string; // <- ADD
+  provider?: "credentials" | "google" | "both";
+  image?: string;
   resetPasswordToken?: string;
   resetPasswordExpire?: Date;
   createdAt: Date;
   updatedAt: Date;
+  readonly name: string;
+  readonly fullName: string;
 }
 
-const UserSchema: Schema = new Schema(
+const UserSchema: Schema<IUser> = new Schema(
   {
     firstName: {
       type: String,
@@ -38,7 +39,7 @@ const UserSchema: Schema = new Schema(
     },
     password: {
       type: String,
-      required: false, // <- CHANGE to false
+      required: false,
       select: false,
     },
     role: {
@@ -49,7 +50,9 @@ const UserSchema: Schema = new Schema(
     },
     provider: {
       type: String,
+      enum: ["credentials", "google", "both"], // <-- FIX ADDED "both"
       default: "credentials",
+      index: true,
     },
     image: {
       type: String,
@@ -64,12 +67,16 @@ const UserSchema: Schema = new Schema(
   }
 );
 
-// full name virtual - KEEP as is
 UserSchema.virtual("name").get(function (this: IUser) {
-  return `${this.firstName} ${this.lastName}`;
+  return `${this.firstName} ${this.lastName}`.trim();
 });
 
-// for dashboard stats
+UserSchema.virtual("fullName").get(function (this: IUser) {
+  return `${this.firstName} ${this.lastName}`.trim();
+});
+
 UserSchema.index({ role: 1, createdAt: -1 });
 
-export default mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
+const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
+
+export default User;

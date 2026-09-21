@@ -13,6 +13,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [googleOnlyMode, setGoogleOnlyMode] = useState(false);
   
   const router = useRouter();
 
@@ -23,12 +24,19 @@ export default function LoginPage() {
     
     try {
       const res = await signIn("credentials", {
-        email,
+        email: email.toLowerCase().trim(),
         password,
         redirect: false,
       });
 
       if (res?.error) {
+        // GOOGLE ONLY ACCOUNT
+        if (res.error.includes("GOOGLE_ONLY")) {
+          setError("This account uses Google login. Please use Continue with Google.");
+          setGoogleOnlyMode(true);
+          setIsLoading(false);
+          return;
+        }
         setError("Invalid email or password");
         setIsLoading(false);
         return;
@@ -79,13 +87,13 @@ export default function LoginPage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Welcome Back</h2>
           
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-5 text-sm flex items-center gap-2">
+            <div className={`px-4 py-3 rounded-lg mb-5 text-sm flex items-center gap-2 border ${googleOnlyMode ? "bg-yellow-50 border-yellow-200 text-yellow-800" : "bg-red-50 border-red-200 text-red-700"}`}>
               <AlertCircle size={16} />
               {error}
             </div>
           )}
 
-          {/* GOOGLE BUTTON */}
+          {/* GOOGLE BUTTON - ALWAYS SHOW FIRST */}
           <button
             onClick={handleGoogleLogin}
             disabled={isGoogleLoading || isLoading}
@@ -98,67 +106,76 @@ export default function LoginPage() {
                 width={20} 
                 height={20} 
                 className="w-5 h-5"
-                unoptimized // needed for external svg
+                unoptimized
               />
             )}
             {isGoogleLoading ? "Connecting..." : "Continue with Google"}
           </button>
 
-          <div className="flex items-center gap-3 mb-5">
-            <div className="h-px bg-gray-200 flex-1" />
-            <span className="text-sm text-gray-400">or</span>
-            <div className="h-px bg-gray-200 flex-1" />
-          </div>
-          
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-              <div className="relative">
-                <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                <input 
-                  id="email"
-                  type="email" 
-                  placeholder="you@example.com" 
-                  value={email} 
-                  onChange={e => setEmail(e.target.value)} 
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" 
-                  required 
-                  disabled={isLoading}
-                />
+          {!googleOnlyMode ? (
+            <>
+              <div className="flex items-center gap-3 mb-5">
+                <div className="h-px bg-gray-200 flex-1" />
+                <span className="text-sm text-gray-400">or</span>
+                <div className="h-px bg-gray-200 flex-1" />
               </div>
+              
+              <form onSubmit={handleLogin} className="space-y-5">
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                  <div className="relative">
+                    <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                    <input 
+                      id="email"
+                      type="email" 
+                      placeholder="you@example.com" 
+                      value={email} 
+                      onChange={e => { setEmail(e.target.value); setGoogleOnlyMode(false); }} 
+                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" 
+                      required 
+                      disabled={isLoading}
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                  <div className="relative">
+                    <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                    <input 
+                      id="password"
+                      type="password" 
+                      placeholder="••••••••" 
+                      value={password} 
+                      onChange={e => setPassword(e.target.value)} 
+                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" 
+                      required 
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <div className="text-right mt-2">
+                    <Link href="/forgot-password" className="text-sm text-blue-600 font-medium hover:underline">
+                      Forgot password?
+                    </Link>
+                  </div>
+                </div>
+                
+                <button 
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md" 
+                  disabled={isLoading || isGoogleLoading}
+                >
+                  {isLoading ? <Loader2 size={18} className="animate-spin" /> : null}
+                  {isLoading ? "Signing In..." : "Login"}
+                </button>
+              </form>
+            </>
+          ) : (
+            <div className="text-center">
+              <p className="text-sm text-gray-600 mb-4">This email is linked to Google. Password login disabled.</p>
+              <button onClick={() => setGoogleOnlyMode(false)} className="text-sm text-blue-600 font-medium hover:underline">Try different email</button>
             </div>
-            
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
-              <div className="relative">
-                <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                <input 
-                  id="password"
-                  type="password" 
-                  placeholder="••••••••" 
-                  value={password} 
-                  onChange={e => setPassword(e.target.value)} 
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" 
-                  required 
-                  disabled={isLoading}
-                />
-              </div>
-              <div className="text-right mt-2">
-                <Link href="/forgot-password" className="text-sm text-blue-600 font-medium hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
-            </div>
-            
-            <button 
-              type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md" 
-              disabled={isLoading || isGoogleLoading}
-            >
-              {isLoading ? <Loader2 size={18} className="animate-spin" /> : null}
-              {isLoading ? "Signing In..." : "Login"}
-            </button>
-          </form>
+          )}
           
           <p className="text-center text-sm text-gray-600 mt-6">
             Do not have an account?{" "}

@@ -3,6 +3,8 @@ import dbConnect from "@/lib/db";
 import Application from "@/models/Application";
 import { verifyToken } from "@/lib/auth";
 
+//all job applicants/jobSeekers all applications can be viewed by the employer who posted the job
+export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   try {
     await dbConnect();

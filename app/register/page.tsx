@@ -31,10 +31,16 @@ export default function RegisterPage() {
     setError("");
     
     try {
-      await register({ firstName, lastName, email, password, role }).unwrap();
+      await register({ 
+        firstName: firstName.trim(), 
+        lastName: lastName.trim(), 
+        email: email.toLowerCase().trim(), 
+        password, 
+        role 
+      }).unwrap();
 
       await signIn("credentials", {
-        email,
+        email: email.toLowerCase().trim(),
         password,
         redirect: false,
       });
@@ -49,17 +55,18 @@ export default function RegisterPage() {
   }
 
   const handleGoogleRegister = async () => {
-  setError("");
-  setIsGoogleLoading(true);
-  // Save role in cookie for server to read - Next.js 15 compatible
-  document.cookie = `register_role=${role}; path=/; max-age=300; SameSite=Lax`;
-  try {
-    await signIn("google", { callbackUrl: "/dashboard" });
-  } catch {
-    setError("Google sign up failed");
-    setIsGoogleLoading(false);
-  }
-};
+    setError("");
+    setIsGoogleLoading(true);
+    document.cookie = `register_role=${role}; path=/; max-age=300; SameSite=Lax`;
+    try {
+      await signIn("google", { callbackUrl: "/dashboard" });
+    } catch {
+      setError("Google sign up failed");
+      setIsGoogleLoading(false);
+    }
+  };
+
+  const isGoogleError = error.toLowerCase().includes("google");
 
   return (
     <div className="min-h-screen bg-linear-to-br from-blue-600 to-indigo-700 flex items-center justify-center p-4">
@@ -76,9 +83,16 @@ export default function RegisterPage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Create Account</h2>
           
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-5 text-sm flex items-center gap-2">
-              <AlertCircle size={16} />
-              {error}
+            <div className={`px-4 py-3 rounded-lg mb-5 text-sm flex flex-col gap-2 border ${isGoogleError ? "bg-yellow-50 border-yellow-200 text-yellow-800" : "bg-red-50 border-red-200 text-red-700"}`}>
+              <div className="flex items-center gap-2">
+                <AlertCircle size={16} />
+                {error}
+              </div>
+              {isGoogleError && (
+                <Link href="/login" className="mt-1 w-full bg-black text-white text-center py-2 rounded-lg text-sm font-medium">
+                  Continue with Google
+                </Link>
+              )}
             </div>
           )}
 
@@ -89,14 +103,14 @@ export default function RegisterPage() {
             className="w-full bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 mb-5 disabled:opacity-50"
           >
             {isGoogleLoading ? <Loader2 size={18} className="animate-spin" /> : (
-                         <Image 
-                              src="https://www.svgrepo.com/show/475656/google-color.svg" 
-                              alt="Google" 
-                              width={20} 
-                              height={20} 
-                              className="w-5 h-5"
-                              unoptimized // needed for external svg
-                            />
+              <Image 
+                src="https://www.svgrepo.com/show/475656/google-color.svg" 
+                alt="Google" 
+                width={20} 
+                height={20} 
+                className="w-5 h-5"
+                unoptimized
+              />
             )}
             {isGoogleLoading ? "Connecting..." : "Continue with Google"}
           </button>

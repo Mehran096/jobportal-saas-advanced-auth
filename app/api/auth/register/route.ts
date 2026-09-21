@@ -25,6 +25,14 @@ export async function POST(req: Request) {
     // Check if user already exists (case-insensitive)
     const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
+      // ===== FIX FOR YOUR SCREENSHOT: mehranh91309@gmail.com =====
+      if (existingUser.provider === "google") {
+        return NextResponse.json(
+          { message: "This email already uses Google login. Please Continue with Google." },
+          { status: 409 }
+        );
+      }
+      // ============================================================
       return NextResponse.json({ message: "User already exists with this email" }, { status: 409 });
     }
 

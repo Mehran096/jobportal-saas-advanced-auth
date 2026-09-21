@@ -16,13 +16,15 @@ export default function ForgotPasswordPage() {
     setMessage("");
     setError("");
     try {
-      const res = await forgotPassword({ email }).unwrap();
+      const res = await forgotPassword({ email: email.toLowerCase().trim() }).unwrap();
       setMessage(res.message);
     } catch (err: unknown) {
       const msg = (err as { data?: { message?: string } })?.data?.message || "Something went wrong";
       setError(msg);
     }
   };
+
+  const isGoogleError = error.toLowerCase().includes("google");
 
   return (
     <div className="min-h-screen bg-linear-to-br from-blue-600 to-indigo-700 flex items-center justify-center p-4">
@@ -45,8 +47,15 @@ export default function ForgotPasswordPage() {
             </div>
           )}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-5 text-sm flex items-center gap-2">
-              <AlertCircle size={16} /> {error}
+            <div className={`px-4 py-3 rounded-lg mb-5 text-sm flex flex-col gap-2 border ${isGoogleError ? "bg-yellow-50 border-yellow-200 text-yellow-800" : "bg-red-50 border-red-200 text-red-700"}`}>
+              <div className="flex items-center gap-2">
+                <AlertCircle size={16} /> {error}
+              </div>
+              {isGoogleError && (
+                <Link href="/login" className="mt-1 w-full bg-black text-white text-center py-2 rounded-lg text-sm font-medium">
+                  Continue with Google
+                </Link>
+              )}
             </div>
           )}
 

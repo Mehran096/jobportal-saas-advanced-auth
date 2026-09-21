@@ -4,8 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { useDispatch } from "react-redux";
+import { useState, useRef, useEffect } from "react";
 import NotificationBell from "@/app/components/NotificationBell";
-import { Briefcase, Bookmark } from "lucide-react";
+import { Briefcase, Bookmark, User, Settings, LogOut, ChevronDown } from "lucide-react";
 import { baseApi } from "@/lib/redux/api/baseApi";
 import { useGetSavedJobsQuery } from "@/lib/redux/api/jobseekerApi";
 
@@ -23,13 +24,15 @@ export default function DashboardHeader() {
   const pathname = usePathname();
   const dispatch = useDispatch();
   const { data: session } = useSession();
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const user = session?.user;
   const fullName = user?.name || "User";
   const role = (user as { role?: string })?.role;
 
   const { data: savedData } = useGetSavedJobsQuery(undefined, {
-    skip: role!== "jobseeker",
+    skip: role !== "jobseeker",
   });
   const savedCount = savedData?.savedJobs?.length || 0;
 
@@ -37,6 +40,17 @@ export default function DashboardHeader() {
     dispatch(baseApi.util.resetApiState());
     await signOut({ callbackUrl: "/login" });
   };
+
+  // close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   if (!user) return null;
 
@@ -50,8 +64,8 @@ export default function DashboardHeader() {
           </Link>
           <nav className="hidden md:flex gap-4">
             {navLinks
-             .filter((link) =>!link.role || link.role === role)
-             .map((link) => {
+              .filter((link) => !link.role || link.role === role)
+              .map((link) => {
                 const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
                 const isSaved = link.href === "/dashboard/saved";
                 return (
@@ -59,7 +73,7 @@ export default function DashboardHeader() {
                     key={link.href}
                     href={link.href}
                     className={`font-medium transition flex items-center gap-1.5 ${
-                      isActive? "text-blue-600" : "text-gray-600 hover:text-blue-600"
+                      isActive ? "text-blue-600" : "text-gray-600 hover:text-blue-600"
                     }`}
                   >
                     {isSaved && <Bookmark size={16} />}
@@ -76,14 +90,55 @@ export default function DashboardHeader() {
         </div>
 
         <div className="flex items-center gap-4">
-          <span className="font-medium hidden sm:block text-gray-700">Hi, {fullName}</span>
           <NotificationBell />
-          <button
-            onClick={handleLogout}
-            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition"
-          >
-            Logout
-          </button>
+
+          {/* My Account Dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setOpen(!open)}
+              className="flex items-center gap-2 font-medium text-gray-700 hover:text-black"
+            >
+              <span className="hidden sm:block">Hi, {fullName}</span>
+              <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                <User size={16} />
+              </div>
+              <ChevronDown size={16} className={`transition ${open ? "rotate-180" : ""}`} />
+            </button>
+
+            {open && (
+              <div className="absolute right-0 mt-3 w-56 bg-white border rounded-xl shadow-lg py-2 z-50">
+                <div className="px-4 py-2 border-b">
+                  <p className="text-sm font-semibold">{fullName}</p>
+                  <p className="text-xs text-gray-500 capitalize">{role}</p>
+                </div>
+
+                <Link
+                  href="/dashboard/myaccount"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-gray-50"
+                >
+                  <User size={16} /> My Account
+                </Link>
+
+                <Link
+                  href="/dashboard/settings"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-gray-50"
+                >
+                  <Settings size={16} /> Settings
+                </Link>
+
+                <div className="border-t my-1" />
+
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50"
+                >
+                  <LogOut size={16} /> Logout
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>

@@ -1,13 +1,16 @@
-// lib/redux/api/authApi.ts - FINAL VERSION WITH FORGOT + RESET
+// lib/redux/api/authApi.ts - FINAL VERSION WITH CHANGE + SET PASSWORD
 import { baseApi } from "./baseApi";
 
-interface User {
+export interface User {
   _id: string;
   firstName: string;
   lastName: string;
   name: string;
+  fullName: string;
   email: string;
   role: 'jobseeker' | 'employer' | 'admin';
+  provider: 'credentials' | 'google' | 'both'; // <-- ADD BOTH
+  image?: string;
 }
 
 interface AuthResponse {
@@ -15,10 +18,18 @@ interface AuthResponse {
   message: string;
 }
 
+interface MyAccountResponse {
+  user: User;
+  message: string;
+}
+
+interface MessageResponse {
+  message: string;
+}
+
 export const authApi = baseApi.injectEndpoints({
   overrideExisting: true,
   endpoints: (builder) => ({
-    // Register - your own API
     register: builder.mutation<AuthResponse, {
       firstName: string;
       lastName: string;
@@ -33,8 +44,7 @@ export const authApi = baseApi.injectEndpoints({
       }),
     }),
 
-    // FORGOT PASSWORD
-    forgotPassword: builder.mutation<{ message: string }, { email: string }>({
+    forgotPassword: builder.mutation<MessageResponse, { email: string }>({
       query: (data) => ({
         url: "/auth/forgot-password",
         method: "POST",
@@ -42,13 +52,63 @@ export const authApi = baseApi.injectEndpoints({
       }),
     }),
 
-    // RESET PASSWORD
-    resetPassword: builder.mutation<{ message: string }, { token: string; password: string }>({
+    resetPassword: builder.mutation<MessageResponse, { token: string; password: string }>({
       query: (data) => ({
         url: "/auth/reset-password",
         method: "POST",
         body: data,
       }),
+    }),
+
+    // --- MY ACCOUNT ---
+    getMyAccount: builder.query<MyAccountResponse, void>({
+      query: () => "/auth/myaccount",
+      providesTags: ["Auth"],
+    }),
+
+    updateMyAccount: builder.mutation<MyAccountResponse, {
+      firstName?: string;
+      lastName?: string;
+      email?: string;
+    }>({
+      query: (body) => ({
+        url: "/auth/myaccount",
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: ["Auth"],
+    }),
+
+    deleteMyAccount: builder.mutation<MessageResponse, void>({
+      query: () => ({
+        url: "/auth/myaccount",
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Auth"],
+    }),
+
+    // --- NEW: CHANGE PASSWORD (for credentials / both) ---
+    changePassword: builder.mutation<MessageResponse, {
+      currentPassword: string;
+      newPassword: string;
+    }>({
+      query: (body) => ({
+        url: "/auth/change-password",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    // --- NEW: SET PASSWORD (for pure google -> both) ---
+    setPassword: builder.mutation<MessageResponse, {
+      newPassword: string;
+    }>({
+      query: (body) => ({
+        url: "/auth/set-password",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Auth"], // to refresh provider = both
     }),
   }),
 });
@@ -56,5 +116,10 @@ export const authApi = baseApi.injectEndpoints({
 export const {
   useRegisterMutation,
   useForgotPasswordMutation,
-  useResetPasswordMutation
+  useResetPasswordMutation,
+  useGetMyAccountQuery,
+  useUpdateMyAccountMutation,
+  useDeleteMyAccountMutation,
+  useChangePasswordMutation,
+  useSetPasswordMutation,
 } = authApi;

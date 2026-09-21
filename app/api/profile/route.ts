@@ -1,10 +1,14 @@
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
+import { verifyToken } from "@/lib/auth";
 import User from "@/models/User";
 import Profile from "@/models/Profile";
 import { UTApi } from "uploadthing/server";
+
+const utapi = new UTApi();
 
 function getFileKeyFromUrl(url: string): string {
   if (!url) return "";
@@ -17,181 +21,165 @@ function getFileKeyFromUrl(url: string): string {
   }
 }
 
-const utapi = new UTApi();
-
-export async function GET() {
-  const session = await getServerSession(authOptions);
-  const email = session?.user?.email;
-
-  if (!email) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
-
-  await dbConnect();
-
-  const user = await User.findOne({ email });
-  if (!user) {
-    return NextResponse.json({ message: "User not found" }, { status: 404 });
-  }
-
-  let profile = await Profile.findOne({ user: user._id });
-
-  if (!profile) {
-    profile = await Profile.create({
-      user: user._id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      headline: "",
-      bio: "",
-      phone: "",
-      location: "",
-      skills: [],
-      profileImage: "",
-      resumeUrl: "",
-      resumeName: "",
-    });
-  }
-
-  return NextResponse.json({
-   ...profile.toObject(),
-    email: user.email,
-    role: user.role,
-  });
+interface VerifiedUser {
+  id: string;
+  role: string;
 }
 
-export async function PUT(req: Request) {
-  const session = await getServerSession(authOptions);
-  const email = session?.user?.email;
-
-  if (!email) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
-
-  const body = (await req.json()) as {
-    firstName?: string;
-    lastName?: string;
-    profileImage?: string;
-    resumeUrl?: string;
-    headline?: string;
-    bio?: string;
-    phone?: string;
-    location?: string;
-    skills?: string[];
-    resumeName?: string;
-  };
-
-  await dbConnect();
-
-  const user = await User.findOne({ email });
-  if (!user) {
-    return NextResponse.json({ message: "User not found" }, { status: 404 });
-  }
-
-  const existing = await Profile.findOne({ user: user._id });
-
-  if (existing) {
-    if (body.profileImage && existing.profileImage && body.profileImage!== existing.profileImage) {
-      const oldKey = getFileKeyFromUrl(existing.profileImage);
-      if (oldKey) {
-        try { await utapi.deleteFiles(oldKey); } catch (e) { console.log("Failed to delete old image", e); }
-      }
-    }
-    if (body.profileImage === "" && existing.profileImage) {
-      const oldKey = getFileKeyFromUrl(existing.profileImage);
-      if (oldKey) {
-        try { await utapi.deleteFiles(oldKey); } catch (e) { console.log("Failed to delete on user delete", e); }
-      }
-    }
-    if (body.resumeUrl && existing.resumeUrl && body.resumeUrl!== existing.resumeUrl) {
-      const oldKey = getFileKeyFromUrl(existing.resumeUrl);
-      if (oldKey) {
-        try { await utapi.deleteFiles(oldKey); } catch (e) { console.log("Failed to delete old resume", e); }
-      }
-    }
-    if (body.resumeUrl === "" && existing.resumeUrl) {
-      const oldKey = getFileKeyFromUrl(existing.resumeUrl);
-      if (oldKey) {
-        try { await utapi.deleteFiles(oldKey); } catch (e) { console.log("Failed to delete resume on delete", e); }
-      }
-    }
-  }
-
-  if (body.firstName || body.lastName) {
-    await User.findByIdAndUpdate(user._id, {
-      firstName: body.firstName?? user.firstName,
-      lastName: body.lastName?? user.lastName,
-    });
-  }
-
-  const updatedProfile = await Profile.findOneAndUpdate(
-    { user: user._id },
-    {...body, user: user._id },
-    { new: true, upsert: true }
-  );
-
-  return NextResponse.json({
-   ...updatedProfile.toObject(),
-    email: user.email,
-    role: user.role,
-  });
+interface UserLean {
+  _id: unknown;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
 }
 
-// ===== NEW: CLEAR PROFILE ONLY (keep User) =====
-export async function DELETE() {
-  const session = await getServerSession(authOptions);
-  const email = session?.user?.email;
+interface ProfileBody {
+  firstName?: string;
+  lastName?: string;
+  profileImage?: string;
+  resumeUrl?: string;
+  headline?: string;
+  bio?: string;
+  phone?: string;
+  location?: string;
+  skills?: string[];
+  resumeName?: string;
+}
 
-  if (!email) {
+export async function GET(req: NextRequest) {
+  try {
+    await dbConnect();
+    const auth = (await verifyToken(req)) as VerifiedUser;
+    const dbUser = await User.findById(auth.id).lean<UserLean>();
+    if (!dbUser) return NextResponse.json({ message: "User not found" }, { status: 404 });
+
+    let profile = await Profile.findOne({ user: auth.id });
+    if (!profile) {
+      profile = await Profile.create({
+        user: auth.id,
+        firstName: dbUser.firstName,
+        lastName: dbUser.lastName,
+        headline: "",
+        bio: "",
+        phone: "",
+        location: "",
+        skills: [],
+        profileImage: "",
+        resumeUrl: "",
+        resumeName: "",
+      });
+    }
+
+    return NextResponse.json({
+     ...profile.toObject(),
+      firstName: dbUser.firstName,
+      lastName: dbUser.lastName,
+      email: dbUser.email,
+      role: dbUser.role,
+    });
+  } catch {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
+}
 
-  await dbConnect();
+export async function PUT(req: NextRequest) {
+  try {
+    await dbConnect();
+    const auth = (await verifyToken(req)) as VerifiedUser;
+    const body = (await req.json()) as ProfileBody;
 
-  const user = await User.findOne({ email });
-  if (!user) {
-    return NextResponse.json({ message: "User not found" }, { status: 404 });
+    const dbUser = await User.findById(auth.id);
+    if (!dbUser) return NextResponse.json({ message: "User not found" }, { status: 404 });
+
+    const existing = await Profile.findOne({ user: dbUser._id });
+
+    if (existing) {
+      if (body.profileImage && existing.profileImage && body.profileImage!== existing.profileImage) {
+        const oldKey = getFileKeyFromUrl(existing.profileImage);
+        if (oldKey) { try { await utapi.deleteFiles(oldKey); } catch { /* ignore */ } }
+      }
+      if (body.profileImage === "" && existing.profileImage) {
+        const oldKey = getFileKeyFromUrl(existing.profileImage);
+        if (oldKey) { try { await utapi.deleteFiles(oldKey); } catch { /* ignore */ } }
+      }
+      if (body.resumeUrl && existing.resumeUrl && body.resumeUrl!== existing.resumeUrl) {
+        const oldKey = getFileKeyFromUrl(existing.resumeUrl);
+        if (oldKey) { try { await utapi.deleteFiles(oldKey); } catch { /* ignore */ } }
+      }
+      if (body.resumeUrl === "" && existing.resumeUrl) {
+        const oldKey = getFileKeyFromUrl(existing.resumeUrl);
+        if (oldKey) { try { await utapi.deleteFiles(oldKey); } catch { /* ignore */ } }
+      }
+    }
+
+    const userDoc = dbUser as unknown as UserLean;
+    if (body.firstName || body.lastName) {
+      await User.findByIdAndUpdate(dbUser._id, {
+        firstName: body.firstName?? userDoc.firstName,
+        lastName: body.lastName?? userDoc.lastName,
+      });
+    }
+
+    const updatedProfile = await Profile.findOneAndUpdate(
+      { user: dbUser._id },
+      {...body, user: dbUser._id },
+      { new: true, upsert: true }
+    );
+
+    const freshUser = await User.findById(dbUser._id).lean<UserLean>();
+    return NextResponse.json({
+     ...updatedProfile.toObject(),
+      email: freshUser?.email,
+      role: freshUser?.role,
+    });
+  } catch {
+    return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
+}
 
-  const profile = await Profile.findOne({ user: user._id });
-  if (!profile) {
-    return NextResponse.json({ success: true, message: "Already empty" });
-  }
+export async function DELETE(req: NextRequest) {
+  try {
+    await dbConnect();
+    const auth = (await verifyToken(req)) as VerifiedUser;
+    const dbUser = await User.findById(auth.id).lean<UserLean>();
+    if (!dbUser) return NextResponse.json({ message: "User not found" }, { status: 404 });
 
-  // 1. Delete files from UploadThing
-  const keys: string[] = [];
-  if (profile.profileImage) {
-    const k = getFileKeyFromUrl(profile.profileImage);
-    if (k) keys.push(k);
-  }
-  if (profile.resumeUrl) {
-    const k = getFileKeyFromUrl(profile.resumeUrl);
-    if (k) keys.push(k);
-  }
-  if (keys.length) {
-    try { await utapi.deleteFiles(keys); console.log("Deleted on clear:", keys); } catch (e) { console.log("UT delete failed", e); }
-  }
+    const profile = await Profile.findOne({ user: auth.id });
+    if (!profile) return NextResponse.json({ success: true, message: "Already empty" });
 
-  // 2. Clear fields - works now because required: false
-  const cleared = await Profile.findOneAndUpdate(
-    { user: user._id },
-    {
-      firstName: "",
-      lastName: "",
-      headline: "",
-      bio: "",
-      phone: "",
-      location: "",
-      skills: [],
-      profileImage: "",
-      resumeUrl: "",
-      resumeName: "",
-    },
-    { new: true }
-  );
+    const keys: string[] = [];
+    if (profile.profileImage) {
+      const k = getFileKeyFromUrl(profile.profileImage);
+      if (k) keys.push(k);
+    }
+    if (profile.resumeUrl) {
+      const k = getFileKeyFromUrl(profile.resumeUrl);
+      if (k) keys.push(k);
+    }
+    if (keys.length) {
+      try { await utapi.deleteFiles(keys); } catch { /* ignore */ }
+    }
 
-  return NextResponse.json({
-    success: true,
-    message: "Profile cleared, user kept",
-    profile: cleared,
-  });
+    const cleared = await Profile.findOneAndUpdate(
+      { user: auth.id },
+      {
+        firstName: dbUser.firstName,
+        lastName: dbUser.lastName,
+        headline: "",
+        bio: "",
+        phone: "",
+        location: "",
+        skills: [],
+        profileImage: "",
+        resumeUrl: "",
+        resumeName: "",
+      },
+      { new: true }
+    );
+
+    return NextResponse.json({ success: true, message: "Profile cleared", profile: cleared });
+  } catch {
+    return NextResponse.json({ message: "Server error" }, { status: 500 });
+  }
 }
