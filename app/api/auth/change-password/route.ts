@@ -1,8 +1,12 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { NextRequest, NextResponse } from "next/server"
 import dbConnect from "@/lib/db"
 import User from "@/models/User"
 import bcrypt from "bcryptjs"
 import { getCurrentUser } from "@/lib/auth"
+ 
 
 //this route is for setting password for users who signed up with password not google login.
 export async function POST(req: NextRequest) {

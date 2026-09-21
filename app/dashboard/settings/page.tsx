@@ -1,4 +1,6 @@
 "use client"
+export const dynamic = 'force-dynamic';
+
 import { useSession, signIn } from "next-auth/react"
 import toast from "react-hot-toast"
 import { useState, FormEvent } from "react"
