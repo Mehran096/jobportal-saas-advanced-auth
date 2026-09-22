@@ -183,7 +183,7 @@ export default function MyApplicationDetailPage() {
             </div>
           </div>
 
-          <div className="lg:col-span-7 bg-white rounded-xl border overflow-hidden lg:h-[85vh] flex flex-col">
+                    <div className="lg:col-span-7 bg-white rounded-xl border overflow-hidden lg:h-[85vh] flex flex-col">
             <div className={`p-3 border-b flex justify-between items-center ${st.bg}`}>
               <h2 className="font-semibold text-sm truncate max-w-[70%]">CV Preview - {job?.title || app.job?.title}</h2>
               <span className={`text-xs capitalize px-3 py-1 rounded-full border font-bold ${st.bg} ${st.border} ${st.text}`}>{app.status}</span>
@@ -191,13 +191,30 @@ export default function MyApplicationDetailPage() {
 
             {profile.resumeUrl? (
               <>
+                {/* Desktop: direct iframe - stable on desktop */}
                 <div className="hidden sm:block flex-1">
                   <iframe src={profile.resumeUrl} className="w-full h-full min-h-[650px]" title="CV" />
                 </div>
-                <div className="sm:hidden">
-                  <iframe src={`https://docs.google.com/gview?url=${encodeURIComponent(profile.resumeUrl)}&embedded=true`} className="w-full h-[70vh] bg-white" title="CV Mobile" />
-                  <div className="p-2 flex gap-2 bg-white border-t">
-                    <a href={profile.resumeUrl} target="_blank" className="flex-1 bg-blue-600 text-white text-xs font-medium py-2.5 rounded-xl text-center">Open PDF</a>
+
+                {/* Mobile MVP: file card, no iframe = no crash */}
+                <div className="sm:hidden p-4">
+                  <div className="rounded-xl border overflow-hidden bg-white">
+                    <div className="p-6 text-center bg-gray-50">
+                      <div className="w-16 h-16 mx-auto bg-blue-100 rounded-2xl flex items-center justify-center mb-3">
+                        <FileText className="text-blue-600" size={32} />
+                      </div>
+                      <p className="text-sm font-semibold truncate">{profile.resumeName}</p>
+                      <p className="text-[11px] text-gray-500 mt-1">{fullName} - CV</p>
+                      <div className="flex gap-2 mt-4">
+                        <a href={profile.resumeUrl} target="_blank" rel="noopener noreferrer" className="flex-1 bg-blue-600 text-white text-xs font-medium py-2.5 rounded-xl text-center flex items-center justify-center gap-1">
+                          <ExternalLink size={14}/> Preview
+                        </a>
+                        <a href={profile.resumeUrl} download className="flex-1 bg-gray-900 text-white text-xs py-2.5 rounded-xl text-center flex items-center justify-center gap-1">
+                          <Download size={14}/> Download
+                        </a>
+                      </div>
+                    </div>
+                    <div className="p-2 bg-white border-t text-[10px] text-center text-gray-400 truncate">{profile.resumeName}</div>
                   </div>
                 </div>
               </>
