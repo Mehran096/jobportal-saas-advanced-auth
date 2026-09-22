@@ -193,7 +193,7 @@ export default function MyApplicationDetailPage() {
               <>
                 {/* Desktop: direct iframe - stable on desktop */}
                 <div className="hidden sm:block flex-1">
-                  <iframe src={profile.resumeUrl} className="w-full h-full min-h-[650px]" title="CV" />
+                  <iframe src={`${profile.resumeUrl}#toolbar=0&navpanes=0`} className="w-full h-full min-h-[650px]" title="CV" />
                 </div>
 
                 {/* Mobile MVP: file card, no iframe = no crash */}
