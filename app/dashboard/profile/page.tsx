@@ -165,7 +165,14 @@ function ProfileForm() {
                     <p className="text-[11px] text-green-600 mt-1">✓ Ready for preview</p>
                     <div className="flex gap-2 mt-4">
                       <button
-   onClick={()=>window.open(pdfToShow, "_blank")}
+  onClick={()=>{
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) {
+      window.open(pdfToShow, "_blank");
+    } else {
+      setShowPreview(true);
+    }
+  }}
   className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-2.5 rounded-xl flex items-center justify-center gap-1"
 >
   <Eye size={14}/> Preview
