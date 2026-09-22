@@ -153,27 +153,31 @@ function ProfileForm() {
                 {pdfToShow && <span className="text-green-600 text-[10px] ml-auto">● Preview below</span>}
               </h3>
 
-              {pdfToShow? (
+             {pdfToShow? (
   <div className="mb-4 rounded-xl overflow-hidden border border-gray-200 bg-white">
-    <div className="p-6 text-center bg-gray-50">
-      <div className="w-16 h-16 mx-auto bg-blue-100 rounded-2xl flex items-center justify-center mb-3">
-        <FileText className="text-blue-600" size={32} />
-      </div>
-      <p className="text-sm font-semibold truncate">{form.resumeName || "CV.pdf"}</p>
-      <p className="text-[11px] text-green-600 mt-1">✓ CV uploaded</p>
-      <a href={pdfToShow} target="_blank" rel="noopener noreferrer" className="mt-4 inline-block bg-blue-600 text-white text-xs px-6 py-2.5 rounded-xl w-full text-center">
-        Open PDF
-      </a>
+
+    {/* Direct PDF preview — works on both desktop + mobile */}
+    <div className="bg-gray-50 w-full h-[500px] sm:h-[600px]">
+      <iframe
+        src={`${pdfToShow}#toolbar=0&view=FitH`}
+        className="w-full h-full border-0"
+        title="CV Preview"
+      />
     </div>
+
     <div className="p-2 flex gap-2 bg-white border-t">
-      <a href={pdfToShow} target="_blank" rel="noopener noreferrer" className="flex-1 bg-gray-900 text-white text-xs py-2.5 rounded-xl text-center">Open Full</a>
-      <div className="flex-1 bg-gray-100 text-[10px] py-2.5 rounded-xl text-center truncate px-1">{form.resumeName || "CV.pdf"}</div>
+      <a href={pdfToShow} target="_blank" rel="noopener noreferrer" className="flex-1 bg-gray-900 text-white text-xs py-2.5 rounded-xl text-center">
+        Open Full
+      </a>
+      <div className="flex-1 bg-gray-100 text-[10px] py-2.5 rounded-xl text-center truncate px-1">
+        {form.resumeName || "CV.pdf"}
+      </div>
     </div>
   </div>
 ) : (
   <div className="border border-dashed border-gray-300 rounded-xl p-8 text-center mb-4 bg-gray-50/50">
     <FileText className="mx-auto text-gray-300 mb-2" />
-    <p className="text-xs text-gray-400">No CV yet — upload PDF to preview here</p>
+    <p className="text-xs text-gray-400">No CV yet</p>
   </div>
 )}
 
