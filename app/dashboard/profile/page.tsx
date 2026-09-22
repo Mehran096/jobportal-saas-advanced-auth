@@ -7,6 +7,11 @@ import DashboardHeader from "@/app/components/DashboardHeader";
 import { Loader2, Save, FileText, User, MapPin, Phone, Briefcase, X, Sparkles, AlertCircle, Trash2 } from "lucide-react";
 import Image from "next/image";
 import toast from "react-hot-toast";
+import dynamic from "next/dynamic";
+const PdfPreview = dynamic(() => import("@/app/components/PdfPreview"), {
+  ssr: false,
+  loading: () => <div className="p-10 text-center text-xs">Loading CV...</div>
+});
 
 function ProfileForm() {
   const router = useRouter();
@@ -112,6 +117,7 @@ function ProfileForm() {
   const isBusy = isUpdating || isImgUp || isResUp;
   const isDisabled = isBusy || isCV_missing;
   const pdfToShow = pdfPreviewLocal || form.resumeUrl;
+  // show delete only if profile has data
   const hasProfileData =!!(profile?.resumeUrl);
 
   return (
@@ -121,6 +127,7 @@ function ProfileForm() {
         <div className="relative overflow-hidden bg-linear-to-br from-blue-600 via-blue-600 to-indigo-600 text-white rounded-[20px] p-5 md:p-8 mb-6 shadow-xl">
           <h1 className="text-xl md:text-3xl font-bold flex items-center gap-2"><Sparkles size={24} /> My Profile</h1>
           {hasProfileData?
+
           <p className="text-blue-100 text-xs sm:text-sm mt-2">You can update your CV — Click on Replace CV (PDF) below the Resume / CV.</p>
           :
           <p className="text-blue-100 text-xs sm:text-sm mt-2">CV is required — Save Profile button disabled until CV upload.</p>
@@ -147,59 +154,66 @@ function ProfileForm() {
             </div>
 
             <div className={`bg-white rounded-[20px] border p-5 sm:p-6 shadow-sm ${isCV_missing? 'border-yellow-200 ring-2 ring-yellow-100' : 'border-gray-100'}`}>
-              <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2 text-sm">
-                <FileText size={18} /> Resume / CV
-                {pdfToShow && <span className="text-green-600 text-[10px] ml-auto">● Preview below</span>}
-              </h3>
+  <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2 text-sm">
+    <FileText size={18} /> Resume / CV 
+    {pdfToShow && <span className="text-green-600 text-[10px] ml-auto">● Preview below</span>}
+  </h3>
 
-              {pdfToShow? (
-                <>
-                  {/* DESKTOP - direct UT url */}
-                  <div className="hidden sm:block mb-4 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
-                    <iframe src={pdfToShow} className="w-full h-[600px]" title="CV Preview" />
-                    <div className="p-2 flex justify-between bg-white border-t text-[11px]">
-                      <span className="truncate max-w-50">{form.resumeName || "CV.pdf"}</span>
-                      <a href={pdfToShow} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline shrink-0 ml-2">Open full</a>
-                    </div>
-                  </div>
+  {pdfToShow ? (
+    <>
+      {/* DESKTOP - iframe preview */}
+      <div className="hidden sm:block mb-4 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+        <iframe src={pdfToShow} className="w-full h-150" title="CV Preview" />
+        <div className="p-2 flex justify-between bg-white border-t text-[11px]">
+          <span className="truncate max-w-50">{form.resumeName || "CV.pdf"}</span>
+          <a href={pdfToShow} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline shrink-0 ml-2">Open full</a>
+        </div>
+      </div>
 
-                  {/* MOBILE - FIXED: NO GVIEW, uses /api/cv-proxy */}
-                  <div className="sm:hidden mb-4 rounded-xl overflow-hidden border border-gray-200 bg-white">
-                    {pdfToShow.startsWith("blob:")? (
-                      <div className="p-8 text-center bg-gray-50">
-                        <div className="w-16 h-16 mx-auto bg-blue-50 rounded-xl flex items-center justify-center mb-3">
-                          <FileText className="text-blue-600" size={32} />
-                        </div>
-                        <p className="text-xs font-medium truncate">{form.resumeName}</p>
-                        <p className="text-[10px] text-gray-400 mt-1">Will preview after Save</p>
-                        <a href={pdfToShow} target="_blank" className="mt-3 inline-block bg-blue-600 text-white text-xs px-4 py-2 rounded-xl">Open PDF</a>
-                      </div>
-                    ) : (
-                      <iframe
-                        src={`/api/profile/cv-proxy?url=${encodeURIComponent(pdfToShow)}`}
-                        className="w-full h-[500px] bg-white"
-                        title="CV Preview Mobile"
-                      />
-                    )}
-                    <div className="p-2 flex gap-2 bg-white border-t">
-                      <a href={pdfToShow} target="_blank" rel="noopener noreferrer" className="flex-1 bg-blue-600 text-white text-xs font-medium py-2.5 rounded-xl text-center">Open PDF</a>
-                      <div className="flex-1 bg-gray-100 text-gray-700 text-[10px] py-2.5 rounded-xl text-center truncate px-1">{form.resumeName || "CV.pdf"}</div>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="border border-dashed border-gray-300 rounded-xl p-8 text-center mb-4 bg-gray-50/50">
-                  <FileText className="mx-auto text-gray-300 mb-2" />
-                  <p className="text-xs text-gray-400">No CV yet — upload PDF to preview here</p>
-                </div>
-              )}
-
-              <label className={`block w-full text-center text-white text-sm font-medium py-2.5 rounded-xl cursor-pointer ${isCV_missing? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-gray-900 hover:bg-black'}`}>
-                {pdfToShow? "Replace CV (PDF)" : "Choose CV (PDF)"}
-                <input type="file" accept="application/pdf" className="hidden" onChange={handleResumeChange} />
-              </label>
-              {resumeFile && <p className="text-xs text-green-600 mt-2 truncate">{resumeFile.name} - will upload on Save</p>}
+      {/* MOBILE - REAL PREVIEW with Google Docs Viewer */}
+    <div className="sm:hidden mb-4 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+      {pdfToShow.startsWith("blob:")? (
+        // Local file selected but not uploaded yet - blob can't be viewed by Google, show object tag
+        <object data={pdfToShow} type="application/pdf" className="w-full h-125">
+          <div className="p-8 text-center">
+            <div className="w-16 h-16 mx-auto bg-red-50 rounded-xl flex items-center justify-center mb-3">
+              <FileText className="text-red-500" size={32} />
             </div>
+            <p className="text-xs font-medium">{form.resumeName}</p>
+            <p className="text-[10px] text-gray-400 mt-1">Preview after Save, tap Open for now</p>
+            <a href={pdfToShow} target="_blank" className="mt-3 inline-block bg-blue-600 text-white text-xs px-4 py-2 rounded-xl">Open PDF</a>
+          </div>
+        </object>
+      ) : (
+        // UploadThing URL - Google viewer works perfectly on mobile
+        <PdfPreview file={pdfToShow} />
+      )}
+
+      <div className="p-2 flex gap-2 bg-white border-t">
+        <a href={pdfToShow} target="_blank" rel="noopener noreferrer" className="flex-1 bg-blue-600 text-white text-xs font-medium py-2.5 rounded-xl text-center">
+          Open PDF
+        </a>
+        <div className="flex-1 bg-gray-100 text-gray-700 text-[10px] py-2.5 rounded-xl text-center truncate px-1">
+          {form.resumeName || "CV.pdf"}
+        </div>
+      </div>
+    </div>
+  </>
+) : (
+  <div className="border border-dashed border-gray-300 rounded-xl p-8 text-center mb-4 bg-gray-50/50">
+    <FileText className="mx-auto text-gray-300 mb-2" />
+    <p className="text-xs text-gray-400">No CV yet — upload PDF to preview here</p>
+  </div>
+)}
+
+  <label className={`block w-full text-center text-white text-sm font-medium py-2.5 rounded-xl cursor-pointer ${isCV_missing? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-gray-900 hover:bg-black'}`}>
+    {pdfToShow? "Replace CV (PDF)" : "Choose CV (PDF)"}
+    <input type="file" accept="application/pdf" className="hidden" onChange={handleResumeChange} />
+  </label>
+  {resumeFile && <p className="text-xs text-green-600 mt-2 truncate">{resumeFile.name} - will upload on Save</p>}
+</div>
+
+           
           </div>
 
           <div className="bg-white rounded-[20px] border border-gray-100 p-4 sm:p-5 md:p-8 shadow-sm">
@@ -223,7 +237,8 @@ function ProfileForm() {
             {isCV_missing && <p className="text-[11px] text-amber-600 mt-2 text-center flex items-center justify-center gap-1"><AlertCircle size={12} /> CV is required to save profile</p>}
           </div>
         </div>
-        {hasProfileData && (
+         {/* SHOW DELETE ONLY IF USER HAS PROFILE DATA */}
+            {hasProfileData && (
           <div className="w-full max-w-full mt-6 bg-white rounded-[20px] border border-red-200 p-4 sm:p-6 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
