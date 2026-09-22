@@ -4,14 +4,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useGetProfileQuery, useUpdateProfileMutation, useDeleteProfileMutation } from "@/lib/redux/api/profileApi";
 import { useUploadThing } from "@/lib/utils/uploadthing";
 import DashboardHeader from "@/app/components/DashboardHeader";
-import { Loader2, Save, FileText, User, MapPin, Phone, Briefcase, X, Sparkles, AlertCircle, Trash2 } from "lucide-react";
+import { Loader2, Save, FileText, User, MapPin, Phone, Briefcase, X, Sparkles, AlertCircle, Trash2, Eye } from "lucide-react";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import dynamic from "next/dynamic";
 
 const PdfPreview = dynamic(() => import("@/app/components/PdfPreview"), {
   ssr: false,
-  loading: () => <div className="p-10 text-center text-xs">Loading CV...</div>
+  loading: () => <div className="p-10 text-center text-xs flex flex-col items-center gap-2"><Loader2 className="animate-spin text-blue-600"/> Loading CV...</div>
 });
 
 function ProfileForm() {
@@ -37,6 +37,7 @@ function ProfileForm() {
   const [pdfPreviewLocal, setPdfPreviewLocal] = useState("");
   const [skillInput, setSkillInput] = useState("");
   const [showDelete, setShowDelete] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const initialized = useRef(false);
 
   useEffect(() => {
@@ -150,36 +151,33 @@ function ProfileForm() {
             <div className={`bg-white rounded-[20px] border p-5 sm:p-6 shadow-sm ${isCV_missing? 'border-yellow-200 ring-2 ring-yellow-100' : 'border-gray-100'}`}>
               <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2 text-sm">
                 <FileText size={18} /> Resume / CV
-                {pdfToShow && <span className="text-green-600 text-[10px] ml-auto">● Preview below</span>}
+                {pdfToShow && <span className="text-green-600 text-[10px] ml-auto">● Ready</span>}
               </h3>
 
-             {pdfToShow? (
-  <div className="mb-4 rounded-xl overflow-hidden border border-gray-200 bg-white">
-
-    {/* Direct PDF preview — works on both desktop + mobile */}
-    <div className="bg-gray-50 w-full h-[500px] sm:h-[600px]">
-      <iframe
-        src={`${pdfToShow}#toolbar=0&view=FitH`}
-        className="w-full h-full border-0"
-        title="CV Preview"
-      />
-    </div>
-
-    <div className="p-2 flex gap-2 bg-white border-t">
-      <a href={pdfToShow} target="_blank" rel="noopener noreferrer" className="flex-1 bg-gray-900 text-white text-xs py-2.5 rounded-xl text-center">
-        Open Full
-      </a>
-      <div className="flex-1 bg-gray-100 text-[10px] py-2.5 rounded-xl text-center truncate px-1">
-        {form.resumeName || "CV.pdf"}
-      </div>
-    </div>
-  </div>
-) : (
-  <div className="border border-dashed border-gray-300 rounded-xl p-8 text-center mb-4 bg-gray-50/50">
-    <FileText className="mx-auto text-gray-300 mb-2" />
-    <p className="text-xs text-gray-400">No CV yet</p>
-  </div>
-)}
+              {pdfToShow? (
+                <div className="mb-4 rounded-xl overflow-hidden border border-gray-200 bg-white">
+                  {/* FILE CARD - NO IFRAME - Fixes mobile crash */}
+                  <div className="p-6 text-center bg-gray-50">
+                    <div className="w-16 h-16 mx-auto bg-blue-100 rounded-2xl flex items-center justify-center mb-3">
+                      <FileText className="text-blue-600" size={32} />
+                    </div>
+                    <p className="text-sm font-semibold truncate">{form.resumeName || "CV.pdf"}</p>
+                    <p className="text-[11px] text-green-600 mt-1">✓ Ready for preview</p>
+                    <div className="flex gap-2 mt-4">
+                      <button onClick={()=>setShowPreview(true)} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-2.5 rounded-xl flex items-center justify-center gap-1">
+                        <Eye size={14}/> Preview
+                      </button>
+                      <a href={pdfToShow} target="_blank" rel="noopener noreferrer" className="flex-1 bg-gray-900 text-white text-xs py-2.5 rounded-xl text-center">Open</a>
+                    </div>
+                  </div>
+                  <div className="p-2 bg-white border-t text-[10px] text-center text-gray-400 truncate">{form.resumeName || "CV.pdf"}</div>
+                </div>
+              ) : (
+                <div className="border border-dashed border-gray-300 rounded-xl p-8 text-center mb-4 bg-gray-50/50">
+                  <FileText className="mx-auto text-gray-300 mb-2" />
+                  <p className="text-xs text-gray-400">No CV yet</p>
+                </div>
+              )}
 
               <label className={`block w-full text-center text-white text-sm font-medium py-2.5 rounded-xl cursor-pointer ${isCV_missing? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-gray-900 hover:bg-black'}`}>
                 {pdfToShow? "Replace CV (PDF)" : "Choose CV (PDF)"}
@@ -203,7 +201,7 @@ function ProfileForm() {
                 <div className="flex flex-wrap gap-2 mt-4">{form.skills.map((s, i) => <span key={i} className="bg-blue-50 text-blue-700 border px-3.5 py-1.5 rounded-full text-xs flex items-center gap-1.5">{s} <X size={14} className="cursor-pointer" onClick={() => setForm({...form, skills: form.skills.filter((_, idx) => idx!== i) })} /></span>)}</div>
               </div>
             </div>
-            <button disabled={isDisabled} onClick={handleSave} className={`mt-6 w-full font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-sm transition ${isCV_missing? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-linear-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90 disabled:opacity-50"}`}>
+            <button disabled={isDisabled} onClick={handleSave} className={`mt-6 w-full font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-sm transition ${isCV_missing? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90 disabled:opacity-50"}`}>
               {isBusy? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />} {isCV_missing? "Upload CV to Save" : isBusy? "Uploading..." : isFromJob? "Save & Apply to Job" : "Save Profile"}
             </button>
             {isCV_missing && <p className="text-[11px] text-amber-600 mt-2 text-center flex items-center justify-center gap-1"><AlertCircle size={12} /> CV is required to save profile</p>}
@@ -223,6 +221,7 @@ function ProfileForm() {
           </div>
         )}
       </main>
+
       {showDelete && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
@@ -234,6 +233,19 @@ function ProfileForm() {
                 {isDeleting? <Loader2 size={16} className="animate-spin"/> : <Trash2 size={16}/>} Clear
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* INDEED STYLE PREVIEW MODAL - This is the fix for mobile */}
+      {showPreview && pdfToShow && (
+        <div className="fixed inset-0 z-[100] bg-white flex flex-col">
+          <div className="flex items-center justify-between p-4 border-b bg-white">
+            <h3 className="text-sm font-semibold truncate max-w-[250px]">{form.resumeName || "CV.pdf"}</h3>
+            <button onClick={()=>setShowPreview(false)} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full"><X size={18}/></button>
+          </div>
+          <div className="flex-1 overflow-auto bg-[#f1f5f9]">
+            <PdfPreview file={pdfToShow} />
           </div>
         </div>
       )}
