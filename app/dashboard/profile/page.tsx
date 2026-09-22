@@ -164,9 +164,19 @@ function ProfileForm() {
                     <p className="text-sm font-semibold truncate">{form.resumeName || "CV.pdf"}</p>
                     <p className="text-[11px] text-green-600 mt-1">✓ Ready for preview</p>
                     <div className="flex gap-2 mt-4">
-                      <button onClick={()=>setShowPreview(true)} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-2.5 rounded-xl flex items-center justify-center gap-1">
-                        <Eye size={14}/> Preview
-                      </button>
+                      <button
+  onClick={()=>{
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) {
+      window.open(pdfToShow, "_blank");
+    } else {
+      setShowPreview(true);
+    }
+  }}
+  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-2.5 rounded-xl flex items-center justify-center gap-1"
+>
+  <Eye size={14}/> Preview
+</button>
                       <a href={pdfToShow} target="_blank" rel="noopener noreferrer" className="flex-1 bg-gray-900 text-white text-xs py-2.5 rounded-xl text-center">Open</a>
                     </div>
                   </div>
@@ -237,18 +247,18 @@ function ProfileForm() {
         </div>
       )}
 
-      {/* INDEED STYLE PREVIEW MODAL - This is the fix for mobile */}
+      {/* STYLE PREVIEW MODAL - This is the fix for mobile */}
       {showPreview && pdfToShow && (
-        <div className="fixed inset-0 z-[100] bg-white flex flex-col">
-          <div className="flex items-center justify-between p-4 border-b bg-white">
-            <h3 className="text-sm font-semibold truncate max-w-[250px]">{form.resumeName || "CV.pdf"}</h3>
-            <button onClick={()=>setShowPreview(false)} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full"><X size={18}/></button>
-          </div>
-          <div className="flex-1 overflow-auto bg-[#f1f5f9]">
-            <PdfPreview file={pdfToShow} />
-          </div>
-        </div>
-      )}
+  <div className="fixed inset-0 z-[100] bg-white hidden sm:flex flex-col">
+    <div className="flex items-center justify-between p-4 border-b bg-white">
+      <h3 className="text-sm font-semibold truncate">{form.resumeName}</h3>
+      <button onClick={()=>setShowPreview(false)} className="p-2 bg-gray-100 rounded-full"><X size={18}/></button>
+    </div>
+    <div className="flex-1 overflow-auto bg-[#f1f5f9]">
+      <PdfPreview file={pdfToShow} />
+    </div>
+  </div>
+)}
     </div>
   );
 }
