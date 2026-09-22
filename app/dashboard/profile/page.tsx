@@ -154,30 +154,28 @@ function ProfileForm() {
               </h3>
 
               {pdfToShow? (
-                <div className="mb-4 rounded-xl overflow-hidden border border-gray-200 bg-white">
-                  {/* DESKTOP ONLY */}
-                  <div className="hidden sm:block">
-                    <PdfPreview file={pdfToShow} />
-                  </div>
-                  {/* MOBILE ONLY - NO PDF RENDER - FIXES YOUR CRASH */}
-                  <div className="sm:hidden p-6 text-center bg-gray-50">
-                    <div className="w-16 h-16 mx-auto bg-blue-100 rounded-2xl flex items-center justify-center mb-3">
-                      <FileText className="text-blue-600" size={32} />
-                    </div>
-                    <p className="text-sm font-semibold truncate">{form.resumeName || "CV.pdf"}</p>
-                    <p className="text-[11px] text-green-600 mt-1">✓ Ready</p>
-                  </div>
-                  <div className="p-2 flex gap-2 bg-white border-t">
-                    <a href={pdfToShow} target="_blank" rel="noopener noreferrer" className="flex-1 bg-blue-600 text-white text-xs font-medium py-2.5 rounded-xl text-center">Open PDF</a>
-                    <div className="flex-1 bg-gray-100 text-gray-700 text-[10px] py-2.5 rounded-xl text-center truncate px-1">{form.resumeName || "CV.pdf"}</div>
-                  </div>
-                </div>
-              ) : (
-                <div className="border border-dashed border-gray-300 rounded-xl p-8 text-center mb-4 bg-gray-50/50">
-                  <FileText className="mx-auto text-gray-300 mb-2" />
-                  <p className="text-xs text-gray-400">No CV yet — upload PDF to preview here</p>
-                </div>
-              )}
+  <div className="mb-4 rounded-xl overflow-hidden border border-gray-200 bg-white">
+    <div className="p-6 text-center bg-gray-50">
+      <div className="w-16 h-16 mx-auto bg-blue-100 rounded-2xl flex items-center justify-center mb-3">
+        <FileText className="text-blue-600" size={32} />
+      </div>
+      <p className="text-sm font-semibold truncate">{form.resumeName || "CV.pdf"}</p>
+      <p className="text-[11px] text-green-600 mt-1">✓ CV uploaded</p>
+      <a href={pdfToShow} target="_blank" rel="noopener noreferrer" className="mt-4 inline-block bg-blue-600 text-white text-xs px-6 py-2.5 rounded-xl w-full text-center">
+        Open PDF
+      </a>
+    </div>
+    <div className="p-2 flex gap-2 bg-white border-t">
+      <a href={pdfToShow} target="_blank" rel="noopener noreferrer" className="flex-1 bg-gray-900 text-white text-xs py-2.5 rounded-xl text-center">Open Full</a>
+      <div className="flex-1 bg-gray-100 text-[10px] py-2.5 rounded-xl text-center truncate px-1">{form.resumeName || "CV.pdf"}</div>
+    </div>
+  </div>
+) : (
+  <div className="border border-dashed border-gray-300 rounded-xl p-8 text-center mb-4 bg-gray-50/50">
+    <FileText className="mx-auto text-gray-300 mb-2" />
+    <p className="text-xs text-gray-400">No CV yet — upload PDF to preview here</p>
+  </div>
+)}
 
               <label className={`block w-full text-center text-white text-sm font-medium py-2.5 rounded-xl cursor-pointer ${isCV_missing? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-gray-900 hover:bg-black'}`}>
                 {pdfToShow? "Replace CV (PDF)" : "Choose CV (PDF)"}
