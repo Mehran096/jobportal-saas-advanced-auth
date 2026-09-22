@@ -120,8 +120,9 @@ export default function ApplicantDetailPage() {
               <>
                 {/* DESKTOP - direct, fast */}
                 <div className="hidden sm:block flex-1">
-                  <iframe src={s.resumeUrl} className="w-full h-full min-h-[650px]" title="CV Preview" />
+                  <iframe src={`${s.resumeUrl}#toolbar=0&navpanes=0`} className="w-full h-full min-h-[650px]" title="CV Preview" />
                 </div>
+                
 
                 {/* MOBILE - proxy to stop download popup */}
                 <div className="sm:hidden p-4">
@@ -134,7 +135,7 @@ export default function ApplicantDetailPage() {
                       <p className="text-[11px] text-gray-500 mt-1">{s.firstName} {s.lastName} - CV</p>
                       <div className="flex gap-2 mt-4">
                         <a
-                          href={`/api/proxy-pdf?url=${encodeURIComponent(s.resumeUrl)}`}
+                          href={s.resumeUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex-1 bg-blue-600 text-white text-xs font-medium py-2.5 rounded-xl text-center flex items-center justify-center gap-1"
