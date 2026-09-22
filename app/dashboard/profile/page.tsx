@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useGetProfileQuery, useUpdateProfileMutation, useDeleteProfileMutation } from "@/lib/redux/api/profileApi";
@@ -163,7 +164,7 @@ function ProfileForm() {
     <>
       {/* DESKTOP - iframe preview */}
       <div className="hidden sm:block mb-4 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
-        <iframe src={pdfToShow} className="w-full h-150" title="CV Preview" />
+        <iframe src={pdfToShow} className="w-full h-[600px]" title="CV Preview" />
         <div className="p-2 flex justify-between bg-white border-t text-[11px]">
           <span className="truncate max-w-50">{form.resumeName || "CV.pdf"}</span>
           <a href={pdfToShow} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline shrink-0 ml-2">Open full</a>
