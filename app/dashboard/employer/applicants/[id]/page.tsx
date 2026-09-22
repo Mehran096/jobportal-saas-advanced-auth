@@ -109,6 +109,7 @@ export default function ApplicantDetailPage() {
           </div>
 
           {/* RIGHT: CV Preview - DESKTOP + MOBILE */}
+                    {/* RIGHT: CV Preview - DESKTOP + MOBILE */}
           <div className="lg:col-span-7 bg-white rounded-xl border overflow-hidden lg:h-[85vh] flex flex-col">
             <div className="p-3 border-b bg-gray-50 flex justify-between items-center">
               <h2 className="font-semibold text-sm truncate max-w-[70%]">CV Preview - {job?.title || app.job?.title}</h2>
@@ -117,34 +118,39 @@ export default function ApplicantDetailPage() {
 
             {s.resumeUrl? (
               <>
-                {/* DESKTOP */}
+                {/* DESKTOP - direct, fast */}
                 <div className="hidden sm:block flex-1">
                   <iframe src={s.resumeUrl} className="w-full h-full min-h-[650px]" title="CV Preview" />
                 </div>
 
-                {/* MOBILE - REAL PREVIEW with Google Docs Viewer */}
-                <div className="sm:hidden">
-                  {s.resumeUrl.startsWith("blob:")? (
-                    <object data={s.resumeUrl} type="application/pdf" className="w-full h-[70vh]">
-                      <div className="p-8 text-center">
-                        <div className="w-16 h-16 mx-auto bg-red-50 rounded-xl flex items-center justify-center mb-3">
-                          <FileText className="text-red-500" size={32} />
-                        </div>
-                        <p className="text-xs font-medium">{s.resumeName || "resume.pdf"}</p>
-                        <p className="text-[10px] text-gray-400 mt-1">Preview after Save, tap Open for now</p>
-                        <a href={s.resumeUrl} target="_blank" className="mt-3 inline-block bg-blue-600 text-white text-xs px-4 py-2 rounded-xl">Open PDF</a>
+                {/* MOBILE - proxy to stop download popup */}
+                <div className="sm:hidden p-4">
+                  <div className="rounded-xl border overflow-hidden bg-white">
+                    <div className="p-6 text-center bg-gray-50">
+                      <div className="w-16 h-16 mx-auto bg-blue-100 rounded-2xl flex items-center justify-center mb-3">
+                        <FileText className="text-blue-600" size={32} />
                       </div>
-                    </object>
-                  ) : (
-                    <iframe
-                      src={`https://docs.google.com/gview?url=${encodeURIComponent(s.resumeUrl)}&embedded=true`}
-                      className="w-full h-[70vh] bg-white"
-                      title="CV Preview Mobile"
-                    />
-                  )}
-                  <div className="p-2 flex gap-2 bg-white border-t">
-                    <a href={s.resumeUrl} target="_blank" rel="noopener noreferrer" className="flex-1 bg-blue-600 text-white text-xs font-medium py-2.5 rounded-xl text-center">Open PDF</a>
-                    <div className="flex-1 bg-gray-100 text-gray-700 text-[10px] py-2.5 rounded-xl text-center truncate px-1">{s.resumeName || "CV.pdf"}</div>
+                      <p className="text-sm font-semibold truncate">{s.resumeName || "resume.pdf"}</p>
+                      <p className="text-[11px] text-gray-500 mt-1">{s.firstName} {s.lastName} - CV</p>
+                      <div className="flex gap-2 mt-4">
+                        <a
+                          href={`/api/proxy-pdf?url=${encodeURIComponent(s.resumeUrl)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 bg-blue-600 text-white text-xs font-medium py-2.5 rounded-xl text-center flex items-center justify-center gap-1"
+                        >
+                          <ExternalLink size={14}/> Preview
+                        </a>
+                        <a
+                          href={s.resumeUrl}
+                          download
+                          className="flex-1 bg-gray-900 text-white text-xs py-2.5 rounded-xl text-center flex items-center justify-center gap-1"
+                        >
+                          <Download size={14}/> Download
+                        </a>
+                      </div>
+                    </div>
+                    <div className="p-2 bg-white border-t text-[10px] text-center text-gray-400 truncate">{s.resumeName || "resume.pdf"}</div>
                   </div>
                 </div>
               </>
