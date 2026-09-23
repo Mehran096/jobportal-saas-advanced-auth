@@ -109,17 +109,21 @@ export default function JobDetailPage() {
             <div className="text-center py-10 text-gray-500">No applicants yet</div>
           ) : (
             <div className="space-y-3">
-              {applications.slice(0, 5).map((app) => (
+              {applications.slice(0, 5).map((app) => {
+                const s = app.snapshot;
+              if (!s) return null;
+                return(
                 <div key={app._id} className="border rounded-lg p-4 flex justify-between items-center hover:shadow-sm transition">
                   <div>
-                    <p className="font-semibold text-gray-900">{app.applicant.firstName} {app.applicant.lastName}</p>
-                    <p className="text-sm text-gray-500">{app.applicant.email}</p>
+                    <p className="font-semibold text-gray-900">{s.firstName} {s.lastName}</p>
+                    <p className="text-sm text-gray-500">{s.email}</p>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${app.status === 'pending'? 'bg-yellow-100 text-yellow-800' : app.status === 'accepted'? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                     {app.status}
                   </span>
                 </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>
