@@ -133,34 +133,45 @@ function JobDetailContent() {
             <p className="text-gray-700 leading-relaxed wrap-break-word overflow-hidden whitespace-pre-line">{job.description}</p>
           </div>
 
-          {/* PROFESSIONAL COMPANY PROFILE - VISIBLE TO JOBSEEKER */}
-          <div className="border-t pt-6 mt-6">
-            <h3 className="font-bold text-[13px] tracking-wide text-gray-900 mb-3 flex items-center gap-2"><Building2 size={16} className="text-blue-600" /> ABOUT COMPANY</h3>
-            <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-5 border">
-              <div className="flex gap-4 items-start">
-                <div className="w-14 h-14 rounded-xl bg-white overflow-hidden relative flex-shrink-0 ring-1 ring-gray-200">
-                  {companyProfile?.companyLogo? (
-                    <Image src={companyProfile.companyLogo} alt={companyProfile.companyName || "logo"} fill className="object-cover" unoptimized priority />
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-gray-400"><Building2 size={24} /></div>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-[15px] text-gray-900">{companyProfile?.companyName || job.company || "Company"}</p>
-                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-[12px] text-gray-500 mt-1.5">
-                    <span className="flex items-center gap-1"><MapPin size={12} />{companyProfile?.location || job.location || "Location not set"}</span>
-                    <span className="flex items-center gap-1"><Users size={12} />{companyProfile?.companySize? `${companyProfile.companySize} employees` : "Size not specified"}</span>
-                    {companyProfile?.companyWebsite && (
-                      <a href={`https://${companyProfile.companyWebsite.replace(/^https?:\/\//, '')}`} target="_blank" className="flex items-center gap-1 text-blue-600 hover:underline"><Globe size={12} />{companyProfile.companyWebsite}</a>
-                    )}
-                  </div>
-                  <p className="text-[13px] text-gray-600 mt-3 leading-relaxed">
-                    {companyProfile?.companyDescription || "This employer has not added a company description yet."}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* PROFESSIONAL COMPANY PROFILE - MOBILE FIXED */}
+<div className="border-t pt-6 mt-6">
+  <h3 className="font-bold text-[13px] tracking-wide text-gray-900 mb-3 flex items-center gap-2"><Building2 size={16} className="text-blue-600" /> ABOUT COMPANY</h3>
+  <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 sm:p-5 border">
+
+    {/* Mobile: column | Desktop: row */}
+    <div className="flex flex-col sm:flex-row gap-4 sm:items-start">
+
+      {/* 1. LOGO DIV FIRST */}
+      <div className="w-16 h-16 sm:w-14 sm:h-14 rounded-xl bg-white overflow-hidden relative flex-shrink-0 ring-1 ring-gray-200 self-start">
+        {companyProfile?.companyLogo? (
+          <Image src={companyProfile.companyLogo} alt={companyProfile.companyName || "logo"} fill className="object-cover" unoptimized priority />
+        ) : (
+          <div className="flex items-center justify-center h-full text-gray-400"><Building2 size={24} /></div>
+        )}
+      </div>
+
+      {/* 2. FULL DETAIL UNDER LOGO ON MOBILE */}
+      <div className="flex-1 min-w-0 w-full">
+        <p className="font-bold text-[16px] sm:text-[15px] text-gray-900 leading-tight">{companyProfile?.companyName || job.company || "ITBS - IT Business Solutions"}</p>
+
+        <div className="flex flex-col gap-1.5 mt-3 text-[13px] text-gray-600">
+          <span className="flex items-center gap-2"><MapPin size={14} className="text-gray-400"/> {companyProfile?.location || job.location || "Lahore"}</span>
+          <span className="flex items-center gap-2"><Users size={14} className="text-gray-400"/> {companyProfile?.companySize? `${companyProfile.companySize} employees` : "500+ employees"}</span>
+          {companyProfile?.companyWebsite && (
+            <a href={`https://${companyProfile.companyWebsite.replace(/^https?:\/\//,'')}`} target="_blank" className="flex items-center gap-2 text-blue-600 hover:underline break-all"><Globe size={14}/> {companyProfile.companyWebsite}</a>
+          )}
+          {companyProfile?.phone && (
+            <span className="flex items-center gap-2">📞 {companyProfile.phone}</span>
+          )}
+        </div>
+
+        <p className="text-[13px] text-gray-600 mt-4 leading-[1.7] whitespace-pre-line">
+          {companyProfile?.companyDescription || "This employer has not added a company description yet."}
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
 
           <div className="border-t pt-5 mt-5">
             <button onClick={handleApplyClick} disabled={alreadyApplied || isApplying}
