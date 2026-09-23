@@ -8,6 +8,8 @@ import { Loader2, Save, FileText, User, MapPin, Phone, Briefcase, X, Sparkles, A
 import Image from "next/image";
 import toast from "react-hot-toast";
 import dynamic from "next/dynamic";
+import DashboardMobileNav from "@/app/components/DashboardMobileNav";
+ 
 
 const PdfPreview = dynamic(() => import("@/app/components/PdfPreview"), {
   ssr: false,
@@ -123,7 +125,7 @@ function ProfileForm() {
 
   return (
     <div className="min-h-screen bg-[#f8fafc]">
-      {/* <DashboardHeader /> */}
+      <DashboardHeader />
       <main className="w-full max-w-6xl mx-auto p-3 sm:p-4 md:p-8 overflow-x-hidden">
         <div className="relative overflow-hidden bg-linear-to-br from-blue-600 via-blue-600 to-indigo-600 text-white rounded-[20px] p-5 md:p-8 mb-6 shadow-xl">
           <h1 className="text-xl md:text-3xl font-bold flex items-center gap-2"><Sparkles size={24} /> My Profile</h1>
@@ -231,6 +233,7 @@ function ProfileForm() {
           </div>
         )}
       </main>
+      <DashboardMobileNav />
 
       {showDelete && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">

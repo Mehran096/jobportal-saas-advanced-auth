@@ -10,6 +10,8 @@ import {
   useDeleteMyAccountMutation
 } from "@/lib/redux/api/authApi";
 import DashboardHeader from "@/app/components/DashboardHeader";
+import DashboardMobileNav from "@/app/components/DashboardMobileNav";
+ 
 
 interface FormState {
   firstName: string;
@@ -26,7 +28,7 @@ type Provider = "credentials" | "google" | "both";
 function Skeleton() {
   return (
     <>
-      {/* <DashboardHeader /> */}
+      <DashboardHeader />
       <div className="max-w-xl mx-auto p-6 space-y-6 animate-pulse">
         <div className="h-8 w-56 bg-gray-200 rounded-lg"></div>
         <div className="h-4 w-40 bg-gray-100 rounded"></div>
@@ -106,7 +108,7 @@ export default function MyAccountPage() {
 
   return (
     <>
-      {/* <DashboardHeader /> */}
+      <DashboardHeader />
       <div className="max-w-xl mx-auto p-6 space-y-6">
         <h1 className="text-2xl font-bold">My Account - {data?.user.role}</h1>
         <p className="text-sm text-gray-500">
@@ -149,6 +151,7 @@ export default function MyAccountPage() {
           </button>
         </div>
       </div>
+      <DashboardMobileNav />
     </>
   );
 }

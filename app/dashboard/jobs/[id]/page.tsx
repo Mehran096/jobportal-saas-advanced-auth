@@ -15,6 +15,8 @@ import { useGetProfileQuery } from "@/lib/redux/api/profileApi";
 import { ArrowLeft, Building, MapPin, Calendar, Users, Loader2, Bookmark, BookmarkCheck, FileText } from "lucide-react";
 import toast from "react-hot-toast";
 import DashboardHeader from "@/app/components/DashboardHeader";
+import DashboardMobileNav from "@/app/components/DashboardMobileNav";
+
  
 
 type ApiError = { data?: { message?: string } };
@@ -101,7 +103,7 @@ function JobDetailContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* <DashboardHeader /> */}
+      <DashboardHeader />
       <div className="max-w-5xl mx-auto p-4 sm:p-6">
         <div className="flex items-center gap-4 mb-6">
           <button onClick={() => router.back()} className="p-2 hover:bg-gray-200 rounded-lg transition"><ArrowLeft size={20} /></button>
@@ -180,6 +182,7 @@ function JobDetailContent() {
           </div>
         </div>
       )}
+      <DashboardMobileNav />
     </div>
   );
 }

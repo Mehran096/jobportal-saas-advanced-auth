@@ -7,6 +7,7 @@ import { useState, FormEvent } from "react"
 import { useRouter } from "next/navigation"
 import { useChangePasswordMutation, useSetPasswordMutation, useGetMyAccountQuery } from "@/lib/redux/api/authApi"
 import DashboardHeader from "@/app/components/DashboardHeader"
+import DashboardMobileNav from "@/app/components/DashboardMobileNav";
 
 type Provider = "credentials" | "google" | "both"
 interface ExtendedUser { provider?: Provider }
@@ -14,7 +15,7 @@ interface ExtendedUser { provider?: Provider }
 function Skeleton() {
   return (
     <>
-      {/* <DashboardHeader /> */}
+      <DashboardHeader />
       <div className="max-w-2xl mx-auto p-6 space-y-6 animate-pulse">
         <div className="h-8 w-32 bg-gray-200 rounded-lg"></div>
         
@@ -88,7 +89,7 @@ export default function SettingsPage() {
 
   return (
     <>
-      {/* <DashboardHeader /> */}
+      <DashboardHeader />
       <div className="max-w-2xl mx-auto p-6 space-y-6">
         <h1 className="text-2xl font-bold">Settings</h1>
         
@@ -130,6 +131,7 @@ export default function SettingsPage() {
           </form>
         )}
       </div>
+      <DashboardMobileNav />
     </>
   )
 }

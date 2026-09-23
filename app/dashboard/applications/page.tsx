@@ -8,7 +8,7 @@ import { useSession } from "next-auth/react";
 import DashboardHeader from "@/app/components/DashboardHeader";
 import { useGetMyApplicationsQuery, type Application } from "@/lib/redux/api/jobseekerApi";
 import { Briefcase, Calendar, Building2, Loader2, CheckCircle2, XCircle, Clock, Eye, Star } from "lucide-react";
-
+import DashboardMobileNav from "@/app/components/DashboardMobileNav";
 const AppSkeleton = () => (
   <div className="bg-white p-5 rounded-xl shadow border animate-pulse">
     <div className="flex justify-between items-start">
@@ -79,7 +79,7 @@ export default function ApplicationsPage() {
   if (userLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        {/* <DashboardHeader /> */}
+        <DashboardHeader />
         <main className="max-w-4xl mx-auto p-4 sm:p-6">
           <div className="flex justify-center py-20"><Loader2 className="animate-spin" /></div>
         </main>
@@ -89,7 +89,7 @@ export default function ApplicationsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* <DashboardHeader /> */}
+      <DashboardHeader />
       <main className="max-w-4xl mx-auto p-4 sm:p-6 pb-24 md:pb-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold">My Applications</h1>
@@ -128,6 +128,7 @@ export default function ApplicationsPage() {
           </div>
         )}
       </main>
+      <DashboardMobileNav />
     </div>
   );
 }

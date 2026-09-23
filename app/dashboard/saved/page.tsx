@@ -6,6 +6,8 @@ import DashboardHeader from "@/app/components/DashboardHeader";
 import { useGetSavedJobsQuery, useUnsaveJobMutation, type Job } from "@/lib/redux/api/jobseekerApi";
 import { Bookmark, MapPin, DollarSign, Briefcase, Trash2, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
+import DashboardMobileNav from "@/app/components/DashboardMobileNav";
+ 
 
 export default function SavedJobsPage() {
   const { data, isLoading } = useGetSavedJobsQuery();
@@ -25,7 +27,7 @@ export default function SavedJobsPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        {/* <DashboardHeader /> */}
+        <DashboardHeader />
         <div className="max-w-7xl mx-auto p-6 flex justify-center py-20">
           <Loader2 className="animate-spin text-blue-600" size={32} />
         </div>
@@ -35,7 +37,7 @@ export default function SavedJobsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* <DashboardHeader /> */}
+      <DashboardHeader />
       <main className="max-w-7xl mx-auto p-4 sm:p-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold flex items-center gap-2">
@@ -79,6 +81,7 @@ export default function SavedJobsPage() {
           </div>
         )}
       </main>
+      <DashboardMobileNav />
     </div>
   );
 }
