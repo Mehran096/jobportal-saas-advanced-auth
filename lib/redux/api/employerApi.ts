@@ -1,5 +1,16 @@
 import { baseApi } from "./baseApi";
 
+interface CompanyProfile {
+  _id: string;
+  companyName: string;
+  companyLogo?: string;
+  companyWebsite?: string;
+  companySize?: string;
+  companyDescription?: string;
+  location?: string;
+  phone?: string;
+}
+
 interface Job {
   _id: string;
   title: string;
@@ -66,7 +77,7 @@ export const employerApi = baseApi.injectEndpoints({
       providesTags: ["Jobs"],
     }),
 
-    getJobById: builder.query<{ job: Job; applicationCount: number }, string>({
+    getJobById: builder.query<{ job: Job; applicationCount: number; companyProfile?: CompanyProfile }, string>({
       query: (id) => `/jobs/${id}`,
       providesTags: (_result, _error, id) => [{ type: "Jobs", id }],
     }),
@@ -114,7 +125,11 @@ export const employerApi = baseApi.injectEndpoints({
       providesTags: ["Applications"],
     }),
 
-    getApplicationById: builder.query<{ application: Application; job: { _id: string; title: string } }, string>({
+    getApplicationById: builder.query<{ 
+  application: Application; 
+  job: { _id: string; title: string; company?: string; location?: string }; 
+  companyProfile?: CompanyProfile 
+}, string>({
       query: (id) => `/applications/${id}`,
       providesTags: (_result, _error, id) => [{ type: "Applications", id }],
     }),

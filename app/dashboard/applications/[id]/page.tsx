@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import DashboardHeader from "@/app/components/DashboardHeader";
 import { useGetApplicationByIdQuery } from "@/lib/redux/api/employerApi";
-import { ArrowLeft, Mail, Phone, MapPin, FileText, ExternalLink, Download, Briefcase, Building2, Calendar, CheckCircle2, XCircle, Star, Clock } from "lucide-react";
+import { ArrowLeft, Mail, Phone, MapPin, FileText, ExternalLink, Download, Briefcase, Building2, Calendar, CheckCircle2, XCircle, Star, Clock, Globe, Building } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import DashboardMobileNav from "@/app/components/DashboardMobileNav";
 
@@ -21,75 +21,21 @@ type StatusStyle = {
 };
 
 const STATUS_MAP: Record<StatusKey, StatusStyle> = {
-  accepted: {
-    bg: "bg-green-50",
-    border: "border-green-200",
-    text: "text-green-700",
-    Icon: CheckCircle2,
-    label: "Accepted",
-    desc: "Congratulations! Employer accepted your application",
-  },
-  shortlisted: {
-    bg: "bg-purple-50",
-    border: "border-purple-200",
-    text: "text-purple-700",
-    Icon: Star,
-    label: "Shortlisted",
-    desc: "You are shortlisted! Employer will contact you soon",
-  },
-  rejected: {
-    bg: "bg-red-50",
-    border: "border-red-200",
-    text: "text-red-700",
-    Icon: XCircle,
-    label: "Rejected",
-    desc: "This application was not selected",
-  },
-  pending: {
-    bg: "bg-yellow-50",
-    border: "border-yellow-200",
-    text: "text-yellow-700",
-    Icon: Clock,
-    label: "Pending",
-    desc: "Under review by employer",
-  },
-  reviewed: {
-    bg: "bg-blue-50",
-    border: "border-blue-200",
-    text: "text-blue-700",
-    Icon: Clock,
-    label: "Reviewed",
-    desc: "Employer viewed your application",
-  },
+  accepted: { bg: "bg-green-50", border: "border-green-200", text: "text-green-700", Icon: CheckCircle2, label: "Accepted", desc: "Congratulations! Employer accepted your application" },
+  shortlisted: { bg: "bg-purple-50", border: "border-purple-200", text: "text-purple-700", Icon: Star, label: "Shortlisted", desc: "You are shortlisted! Employer will contact you soon" },
+  rejected: { bg: "bg-red-50", border: "border-red-200", text: "text-red-700", Icon: XCircle, label: "Rejected", desc: "This application was not selected" },
+  pending: { bg: "bg-yellow-50", border: "border-yellow-200", text: "text-yellow-700", Icon: Clock, label: "Pending", desc: "Under review by employer" },
+  reviewed: { bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700", Icon: Clock, label: "Reviewed", desc: "Employer viewed your application" },
 };
 
 interface Snapshot {
-  firstName?: string;
-  lastName?: string;
-  headline?: string;
-  bio?: string;
-  email?: string;
-  phone?: string;
-  location?: string;
-  profileImage?: string;
-  skills?: string[];
-  resumeUrl?: string;
-  resumeName?: string;
+  firstName?: string; lastName?: string; headline?: string; bio?: string; email?: string; phone?: string; location?: string; profileImage?: string; skills?: string[]; resumeUrl?: string; resumeName?: string;
 }
-
 interface Applicant {
-  firstName?: string;
-  lastName?: string;
-  title?: string;
-  headline?: string;
-  bio?: string;
-  email?: string;
-  phone?: string;
-  location?: string;
-  profilePicture?: string;
-  avatar?: string;
-  image?: string;
-  skills?: string[];
+  firstName?: string; lastName?: string; title?: string; headline?: string; bio?: string; email?: string; phone?: string; location?: string; profilePicture?: string; avatar?: string; image?: string; skills?: string[];
+}
+interface CompanyProfile {
+  companyName: string; companyLogo?: string; companyWebsite?: string; companySize?: string; companyDescription?: string; location?: string; phone?: string;
 }
 
 export default function MyApplicationDetailPage() {
@@ -100,10 +46,11 @@ export default function MyApplicationDetailPage() {
   if (isLoading) return <div className="p-10 text-center">Loading...</div>;
   if (!data?.application) return <div className="p-10 text-center">Application not found</div>;
 
-  const app = data.application as { _id: string; status: StatusKey; createdAt: string; snapshot: Snapshot; applicant: Applicant; job?: { title?: string } };
+  const app = data.application as { _id: string; status: StatusKey; createdAt: string; snapshot: Snapshot; applicant: Applicant; job?: { title?: string; company?: string; location?: string } };
   const s = app.snapshot || {};
   const live = app.applicant || {};
-  const job = data.job as { title?: string } | undefined;
+  const job = data.job as { title?: string; company?: string; location?: string } | undefined;
+  const companyProfile = data.companyProfile as CompanyProfile | undefined;
 
   const profile = {
     firstName: live.firstName || s.firstName || "",
@@ -125,14 +72,14 @@ export default function MyApplicationDetailPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <DashboardHeader />
-      <main className="max-w-7xl mb-16 mx-auto p-3 sm:p-6">
-        <button onClick={() => router.push("/dashboard/applications")} className="flex items-center gap-2 mb-4 text-sm px-3 py-2 rounded-lg border bg-white hover:bg-gray-50">
+      <main className="max-w-7xl mb-16 mx-auto p-3 sm:p-6 pb-28 lg:pb-6">
+        <button onClick={() => router.push("/dashboard/applications")} className="flex items-center gap-2 mb-4 text-sm px-3 py-2 rounded-xl border bg-white hover:bg-gray-50">
           <ArrowLeft size={16} /> Back to Applications
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-5 space-y-4 h-fit">
-            {/* STATUS with colors */}
+            {/* STATUS */}
             <div className={`p-4 rounded-xl border flex gap-3 ${st.bg} ${st.border}`}>
               <st.Icon className={`w-5 h-5 ${st.text}`} />
               <div>
@@ -141,14 +88,38 @@ export default function MyApplicationDetailPage() {
               </div>
             </div>
 
-            {/* Profile - same as employer */}
+            {/* JOB + COMPANY CARD - NEW */}
+            <div className="bg-white rounded-xl border p-5">
+              <h4 className="font-bold text-[13px] tracking-wide mb-3 flex items-center gap-2"><Briefcase size={14} className="text-blue-600"/> APPLIED JOB</h4>
+              <p className="font-bold text-[15px]">{job?.title || app.job?.title || "Job Title"}</p>
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-[12px] text-gray-500 mt-2">
+                <span className="flex items-center gap-1"><Building size={12}/>{companyProfile?.companyName || job?.company || app.job?.company || "Company"}</span>
+                <span className="flex items-center gap-1"><MapPin size={12}/>{companyProfile?.location || job?.location || app.job?.location || "Location"}</span>
+              </div>
+
+              {/* COMPANY PROFILE */}
+              <div className="mt-4 bg-gray-50 rounded-xl p-3 border">
+                <div className="flex gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-white relative overflow-hidden ring-1 ring-gray-200 flex-shrink-0">
+                    {companyProfile?.companyLogo? (
+                      <Image src={companyProfile.companyLogo} alt="logo" fill className="object-cover" unoptimized />
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-gray-400"><Building2 size={20}/></div>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm">{companyProfile?.companyName || job?.company || "Company not set"}</p>
+                    <p className="text-[11px] text-gray-500 mt-0.5 flex items-center gap-1"><Globe size={11}/>{companyProfile?.companyWebsite || "Website not set"} • {companyProfile?.companySize || "Size N/A"}</p>
+                    <p className="text-[11px] text-gray-600 mt-2 line-clamp-2">{companyProfile?.companyDescription || "No company description."}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Profile */}
             <div className="bg-white rounded-xl border p-6">
               <div className="flex gap-4">
-                <Image
-                  src={profile.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}`}
-                  width={64} height={64} unoptimized alt={fullName}
-                  className="w-16 h-16 rounded-full object-cover border"
-                />
+                <Image src={profile.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}`} width={64} height={64} unoptimized alt={fullName} className="w-16 h-16 rounded-full object-cover border" />
                 <div className="min-w-0">
                   <h1 className="text-xl font-bold wrap-break-word">{fullName}</h1>
                   <p className="text-blue-600 text-sm font-medium wrap-break-word">{profile.headline}</p>
@@ -184,7 +155,7 @@ export default function MyApplicationDetailPage() {
             </div>
           </div>
 
-                    <div className="lg:col-span-7 bg-white rounded-xl border overflow-hidden lg:h-[85vh] flex flex-col">
+          <div className="lg:col-span-7 bg-white rounded-xl border overflow-hidden lg:h-[85vh] flex flex-col">
             <div className={`p-3 border-b flex justify-between items-center ${st.bg}`}>
               <h2 className="font-semibold text-sm truncate max-w-[70%]">CV Preview - {job?.title || app.job?.title}</h2>
               <span className={`text-xs capitalize px-3 py-1 rounded-full border font-bold ${st.bg} ${st.border} ${st.text}`}>{app.status}</span>
@@ -192,12 +163,9 @@ export default function MyApplicationDetailPage() {
 
             {profile.resumeUrl? (
               <>
-                {/* Desktop: direct iframe - stable on desktop */}
                 <div className="hidden sm:block flex-1">
                   <iframe src={`${profile.resumeUrl}#toolbar=0&navpanes=0`} className="w-full h-full min-h-[650px]" title="CV" />
                 </div>
-
-                {/* Mobile MVP: file card, no iframe = no crash */}
                 <div className="sm:hidden p-4">
                   <div className="rounded-xl border overflow-hidden bg-white">
                     <div className="p-6 text-center bg-gray-50">

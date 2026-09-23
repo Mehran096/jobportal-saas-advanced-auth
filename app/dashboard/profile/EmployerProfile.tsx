@@ -120,7 +120,7 @@ export default function EmployerProfile() {
             </div>
             <div>
               <label className="text-[11px] font-bold uppercase tracking-wide text-gray-700 flex items-center gap-1"><Globe size={12}/> Website</label>
-              <input value={form.companyWebsite} onChange={e => setForm({...form, companyWebsite: e.target.value})} placeholder="phone-store.asia" className="mt-2 w-full border border-gray-200 rounded-xl px-4 py-3 text-sm bg-gray-50/50 focus:bg-white focus:border-blue-500 focus:outline-none" />
+              <input value={form.companyWebsite} onChange={e => setForm({...form, companyWebsite: e.target.value})} placeholder="www.com." className="mt-2 w-full border border-gray-200 rounded-xl px-4 py-3 text-sm bg-gray-50/50 focus:bg-white focus:border-blue-500 focus:outline-none" />
             </div>
             <div>
               <label className="text-[11px] font-bold uppercase tracking-wide text-gray-700 flex items-center gap-1"><Users size={12}/> Company Size</label>
@@ -138,7 +138,7 @@ export default function EmployerProfile() {
             </div>
             <div className="sm:col-span-2">
               <label className="text-[11px] font-bold uppercase tracking-wide text-gray-700">About Company</label>
-              <textarea rows={4} value={form.companyDescription} onChange={e => setForm({...form, companyDescription: e.target.value})} placeholder="It's a very good company" className="mt-2 w-full border border-gray-200 rounded-xl px-4 py-3 text-sm bg-gray-50/50 focus:bg-white focus:border-blue-500 focus:outline-none resize-none" />
+              <textarea rows={4} value={form.companyDescription} onChange={e => setForm({...form, companyDescription: e.target.value})} placeholder="Company description" className="mt-2 w-full border border-gray-200 rounded-xl px-4 py-3 text-sm bg-gray-50/50 focus:bg-white focus:border-blue-500 focus:outline-none resize-none" />
             </div>
           </div>
           <button disabled={isBusy} onClick={handleSave} className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 transition text-sm">

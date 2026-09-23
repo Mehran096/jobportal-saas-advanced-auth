@@ -6,11 +6,12 @@ import dbConnect from "@/lib/db";
 import { verifyToken } from "@/lib/auth";
 import { sendStatusEmail } from "@/lib/mailer";
 
-// CRITICAL for Vercel — keep these
 import "@/models/Job";
 import "@/models/User";
+import "@/models/Profile"; // <-- ADD THIS
 import Application from "@/models/Application";
 import Notification from "@/models/Notification";
+import Profile from "@/models/Profile"; // <-- ADD THIS
 import { Types } from "mongoose";
 
 type Params = { params: Promise<{ id: string }> };
@@ -18,6 +19,9 @@ type Params = { params: Promise<{ id: string }> };
 interface PopulatedJob {
   _id: Types.ObjectId;
   title: string;
+  company?: string;
+  location?: string;
+  type?: string;
   postedBy: Types.ObjectId;
 }
 
@@ -38,17 +42,13 @@ type ValidStatus = "pending" | "shortlisted" | "accepted" | "rejected";
 const FINAL_STATUSES: ValidStatus[] = ["accepted", "rejected", "shortlisted"];
 const VALID_STATUSES: ValidStatus[] = ["pending", "shortlisted", "accepted", "rejected"];
 
-// --- GET FOR BOTH: Employer Full Profile + Jobseeker My Application ---
 export async function GET(req: NextRequest, { params }: Params) {
   try {
     await dbConnect();
     const { id } = await params;
     const user = (await verifyToken(req)) as unknown as { id: string; role: string; _id?: string };
-
     const userId = user.id || user._id;
-    if (!userId) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
+    if (!userId) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
     type LeanApplication = {
       _id: Types.ObjectId;
@@ -60,45 +60,42 @@ export async function GET(req: NextRequest, { params }: Params) {
     };
 
     const application = (await Application.findById(id)
-      .populate<{ job: PopulatedJob }>("job", "title company location type postedBy")
-      .populate<{ applicant: PopulatedApplicant }>("applicant", "firstName lastName email")
-      .lean()) as unknown as LeanApplication | null;
+     .populate<{ job: PopulatedJob }>("job", "title company location type postedBy")
+     .populate<{ applicant: PopulatedApplicant }>("applicant", "firstName lastName email")
+     .lean()) as unknown as LeanApplication | null;
 
-    if (!application) {
-      return NextResponse.json({ message: "Application not found" }, { status: 404 });
-    }
+    if (!application) return NextResponse.json({ message: "Application not found" }, { status: 404 });
 
     const job = application.job as unknown as PopulatedJob;
-    if (!job) {
-      return NextResponse.json({ message: "Job not found" }, { status: 404 });
-    }
+    if (!job) return NextResponse.json({ message: "Job not found" }, { status: 404 });
 
-    // --- JOBSEEKER: can view own application ---
+    // FETCH COMPANY PROFILE - this is what jobseeker will see
+    const companyProfile = await Profile.findOne({ user: job.postedBy }).lean();
+
+    // JOBSEEKER
     if (user.role === "jobseeker") {
-      const applicantId = (application.applicant as PopulatedApplicant)?._id 
-        ? (application.applicant as PopulatedApplicant)._id.toString()
+      const applicantId = (application.applicant as PopulatedApplicant)?._id
+       ? (application.applicant as PopulatedApplicant)._id.toString()
         : (application.applicant as Types.ObjectId).toString();
 
-      if (applicantId !== userId.toString()) {
+      if (applicantId!== userId.toString()) {
         return NextResponse.json({ message: "Forbidden: Not your application" }, { status: 403 });
       }
-      return NextResponse.json({ application, job }, { status: 200 });
+      return NextResponse.json({ application, job, companyProfile }, { status: 200 });
     }
 
-    // --- EMPLOYER: can view if job posted by him ---
+    // EMPLOYER
     if (user.role === "employer") {
-      if (!job.postedBy) {
-        return NextResponse.json({ message: "Job owner not found" }, { status: 404 });
-      }
-      if (job.postedBy.toString() !== userId.toString()) {
+      if (!job.postedBy) return NextResponse.json({ message: "Job owner not found" }, { status: 404 });
+      if (job.postedBy.toString()!== userId.toString()) {
         return NextResponse.json({ message: "Forbidden: Not your job" }, { status: 403 });
       }
-      return NextResponse.json({ application, job }, { status: 200 });
+      return NextResponse.json({ application, job, companyProfile }, { status: 200 });
     }
 
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Server error";
+    const message = error instanceof Error? error.message : "Server error";
     console.error("GET Application Error:", error);
     return NextResponse.json({ message }, { status: 500 });
   }

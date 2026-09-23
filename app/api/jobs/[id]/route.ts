@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import dbConnect from "@/lib/db";
 import Job from "@/models/Job";
+import Profile from "@/models/Profile";
 import Application from "@/models/Application";
 import { verifyToken } from "@/lib/auth";
 
@@ -18,7 +19,11 @@ export async function GET(req: NextRequest, { params }: Params) {
 
     const applicationCount = await Application.countDocuments({ job: id });
 
-    return NextResponse.json({ job, applicationCount }, { status: 200 });
+    // NEW: fetch company profile from postedBy
+    const companyProfile = await Profile.findOne({ user: job.postedBy._id }).lean();
+
+    return NextResponse.json({ job, applicationCount, companyProfile }, { status: 200 });
+
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Server error";
     return NextResponse.json({ message }, { status: 500 });
