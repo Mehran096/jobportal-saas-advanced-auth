@@ -44,7 +44,7 @@ export default function ApplicantDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <DashboardHeader />
+      {/* <DashboardHeader /> */}
       <main className="max-w-7xl mx-auto p-3 sm:p-6">
         <button onClick={() => router.back()} className="flex items-center gap-2 mb-4 text-sm hover:bg-white px-3 py-2 rounded-lg border">
           <ArrowLeft size={16} /> Back to Applicants

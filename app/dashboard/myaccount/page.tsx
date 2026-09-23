@@ -106,7 +106,7 @@ export default function MyAccountPage() {
 
   return (
     <>
-      <DashboardHeader />
+      {/* <DashboardHeader /> */}
       <div className="max-w-xl mx-auto p-6 space-y-6">
         <h1 className="text-2xl font-bold">My Account - {data?.user.role}</h1>
         <p className="text-sm text-gray-500">

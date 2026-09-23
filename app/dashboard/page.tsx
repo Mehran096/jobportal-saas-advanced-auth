@@ -103,7 +103,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-       <DashboardHeader />
+       {/* <DashboardHeader /> */}
       <main className="max-w-7xl mx-auto p-4 sm:p-6">
         <div className="bg-linear-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow p-6 mb-8">
           <h2 className="text-2xl font-semibold mb-1">Welcome back, {fullName}!</h2>

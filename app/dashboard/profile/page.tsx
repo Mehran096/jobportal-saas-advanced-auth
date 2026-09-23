@@ -123,7 +123,7 @@ function ProfileForm() {
 
   return (
     <div className="min-h-screen bg-[#f8fafc]">
-      <DashboardHeader />
+      {/* <DashboardHeader /> */}
       <main className="w-full max-w-6xl mx-auto p-3 sm:p-4 md:p-8 overflow-x-hidden">
         <div className="relative overflow-hidden bg-linear-to-br from-blue-600 via-blue-600 to-indigo-600 text-white rounded-[20px] p-5 md:p-8 mb-6 shadow-xl">
           <h1 className="text-xl md:text-3xl font-bold flex items-center gap-2"><Sparkles size={24} /> My Profile</h1>
