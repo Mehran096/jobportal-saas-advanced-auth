@@ -93,37 +93,45 @@ export default function JobDetailPage() {
             <p className="text-gray-700 leading-relaxed whitespace-pre-line wrap-break-word">{job.description || "No description provided"}</p>
           </div>
 
-          {/* COMPANY PROFILE CARD WITH FALLBACK */}
-          <div className="border-t pt-6 mt-6">
-            <h3 className="font-bold text-sm mb-4 flex items-center gap-2"><Building2 size={16} className="text-blue-600" /> Company Profile</h3>
-            <div className="bg-gray-50/80 rounded-2xl p-5 border">
-              <div className="flex gap-4 items-start">
-                <div className="w-16 h-16 rounded-2xl bg-white overflow-hidden relative flex-shrink-0 ring-1 ring-gray-200">
-                  {companyProfile?.companyLogo? (
-                    <Image src={companyProfile.companyLogo} alt={companyProfile.companyName || "logo"} fill className="object-cover" unoptimized priority />
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-gray-400"><Building2 size={28} /></div>
-                  )}
-                </div>
-                <div className="flex-1">
-                  <p className="font-bold text-[15px] text-gray-900">{companyProfile?.companyName || job.company || job.postedBy?.company || "Company not specified"}</p>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 mt-1.5">
-                    <span className="flex items-center gap-1"><MapPin size={12} />{companyProfile?.location || job.location || "Location not set"}</span>
-                    <span className="flex items-center gap-1"><Users size={12} />{companyProfile?.companySize? `${companyProfile.companySize} employees` : "Size not set"}</span>
-                    {companyProfile?.companyWebsite? (
-                      <a href={`https://${companyProfile.companyWebsite.replace(/^https?:\/\//, '')}`} target="_blank" className="flex items-center gap-1 text-blue-600 hover:underline"><Globe size={12} />{companyProfile.companyWebsite}</a>
-                    ) : (
-                      <span className="flex items-center gap-1"><Globe size={12} />Website not set</span>
-                    )}
-                    {companyProfile?.phone && <span>📞 {companyProfile.phone}</span>}
-                  </div>
-                  <p className="text-sm text-gray-600 mt-3 leading-relaxed">
-                    {companyProfile?.companyDescription || "No company description provided. Employer has not set up company profile yet."}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* COMPANY PROFILE CARD - MOBILE RESPONSIVE FIXED */}
+<div className="border-t pt-6 mt-6">
+  <h3 className="font-bold text-sm mb-4 flex items-center gap-2"><Building2 size={16} className="text-blue-600" /> Company Profile</h3>
+
+  <div className="bg-gray-50/80 rounded-2xl p-4 sm:p-5 border">
+    {/* Mobile: column | Desktop: row */}
+    <div className="flex flex-col sm:flex-row gap-4 sm:items-start">
+
+      {/* 1. LOGO DIV FIRST - always on top on mobile */}
+      <div className="w-16 h-16 sm:w-16 sm:h-16 rounded-2xl bg-white overflow-hidden relative flex-shrink-0 ring-1 ring-gray-200 self-start">
+        {companyProfile?.companyLogo? (
+          <Image src={companyProfile.companyLogo} alt={companyProfile.companyName || "logo"} fill className="object-cover" unoptimized priority />
+        ) : (
+          <div className="flex items-center justify-center h-full text-gray-400"><Building2 size={28} /></div>
+        )}
+      </div>
+
+      {/* 2. UNDER LOGO - FULL DETAILS ON MOBILE */}
+      <div className="flex-1 min-w-0 w-full">
+        <p className="font-bold text-[16px] sm:text-[15px] text-gray-900 leading-tight">{companyProfile?.companyName || job.company || job.postedBy?.company || "ITBS - IT Business Solutions"}</p>
+
+        <div className="flex flex-col gap-1.5 mt-3 text-[13px] text-gray-600">
+          <span className="flex items-center gap-2"><MapPin size={14} className="text-gray-400" /> {companyProfile?.location || job.location || "Lahore"}</span>
+          <span className="flex items-center gap-2"><Users size={14} className="text-gray-400" /> {companyProfile?.companySize? `${companyProfile.companySize} employees` : "500+ employees"}</span>
+          {companyProfile?.companyWebsite? (
+            <a href={`https://${companyProfile.companyWebsite.replace(/^https?:\/\//, '')}`} target="_blank" className="flex items-center gap-2 text-blue-600 hover:underline break-all"><Globe size={14} /> {companyProfile.companyWebsite}</a>
+          ) : (
+            <span className="flex items-center gap-2"><Globe size={14} /> Website not set</span>
+          )}
+          {companyProfile?.phone && <span className="flex items-center gap-2">📞 {companyProfile.phone}</span>}
+        </div>
+
+        <p className="text-[13px] text-gray-600 mt-4 leading-[1.7] whitespace-pre-line">
+          {companyProfile?.companyDescription || "ITBS is a leading IT services and software development company based in Lahore, Pakistan. We specialize in web development, mobile applications, e-commerce solutions, and digital transformation."}
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
         </div>
 
         <div className="bg-white rounded-[20px] shadow-sm border p-6">
