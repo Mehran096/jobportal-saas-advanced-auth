@@ -7,14 +7,22 @@ export interface IProfile {
   name: string;
   email: string;
   role: "jobseeker" | "employer" | "admin";
+  // common
   profileImage: string;
+  phone: string;
+  location: string;
+  // jobseeker
   resumeUrl: string;
   resumeName: string;
   headline: string;
   bio: string;
   skills: string[];
-  phone: string;
-  location: string;
+  // employer - NEW
+  companyName: string;
+  companyWebsite: string;
+  companySize: string;
+  companyDescription: string;
+  companyLogo: string;
 }
 
 export const profileApi = baseApi.injectEndpoints({
@@ -35,7 +43,6 @@ export const profileApi = baseApi.injectEndpoints({
       invalidatesTags: ["Profile"],
     }),
 
-    // NEW: delete file from UploadThing storage
     deleteFile: builder.mutation<
       { success: boolean; deleted?: string },
       { url?: string; fileKey?: string }
@@ -47,9 +54,8 @@ export const profileApi = baseApi.injectEndpoints({
       }),
     }),
 
-    // NEW: clear profile data (keep user login)
     deleteProfile: builder.mutation<
-      { success: boolean; message?: string },
+      { success: boolean; message?: string; profile?: IProfile },
       void
     >({
       query: () => ({

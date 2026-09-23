@@ -2,16 +2,24 @@ import mongoose, { Schema, Document } from "mongoose";
 
 export interface IProfile extends Document {
   user: mongoose.Types.ObjectId;
+  // common
+  phone?: string;
+  location?: string;
+  profileImage?: string;
+  // jobseeker
   firstName?: string;
   lastName?: string;
   headline?: string;
   bio?: string;
-  phone?: string;
-  location?: string;
   skills: string[];
-  profileImage?: string;
   resumeUrl?: string;
   resumeName?: string;
+  // employer
+  companyName?: string;
+  companyWebsite?: string;
+  companySize?: string;
+  companyDescription?: string;
+  companyLogo?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,62 +30,29 @@ const ProfileSchema: Schema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      unique: true, // 1 user = 1 profile
-      index: true,
+      unique: true,
     },
-    firstName: {
-      type: String,
-      required: false,
-      default: "",
-      trim: true,
-    },
-    lastName: {
-      type: String,
-      required: false,
-      default: "",
-      trim: true,
-    },
-    headline: {
-      type: String,
-      default: "",
-      trim: true,
-    },
-    bio: {
-      type: String,
-      default: "",
-      maxlength: 500,
-    },
-    phone: {
-      type: String,
-      default: "",
-      trim: true,
-    },
-    location: {
-      type: String,
-      default: "",
-      trim: true,
-    },
-    skills: {
-      type: [String],
-      default: [],
-    },
-    profileImage: {
-      type: String,
-      default: "",
-    },
-    resumeUrl: {
-      type: String,
-      default: "",
-    },
-    resumeName: {
-      type: String,
-      default: "",
-    },
+    phone: { type: String, default: "", trim: true },
+    location: { type: String, default: "", trim: true },
+    profileImage: { type: String, default: "" },
+
+    // jobseeker
+    firstName: { type: String, default: "", trim: true },
+    lastName: { type: String, default: "", trim: true },
+    headline: { type: String, default: "", trim: true },
+    bio: { type: String, default: "", maxlength: 500 },
+    skills: { type: [String], default: [] },
+    resumeUrl: { type: String, default: "" },
+    resumeName: { type: String, default: "" },
+
+    // employer
+    companyName: { type: String, default: "", trim: true },
+    companyWebsite: { type: String, default: "", trim: true },
+    companySize: { type: String, default: "", trim: true },
+    companyDescription: { type: String, default: "", maxlength: 1000 },
+    companyLogo: { type: String, default: "" },
   },
   { timestamps: true }
 );
-
-// fast lookup by user
-ProfileSchema.index({ user: 1 });
 
 export default mongoose.models.Profile || mongoose.model<IProfile>("Profile", ProfileSchema);

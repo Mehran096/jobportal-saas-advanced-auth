@@ -15,7 +15,7 @@ const navLinks = [
   { href: "/dashboard/jobs", label: "Find Jobs", role: "jobseeker" },
   { href: "/dashboard/saved", label: "Saved Jobs", role: "jobseeker" },
   { href: "/dashboard/applications", label: "My Applications", role: "jobseeker" },
-  { href: "/dashboard/profile", label: "My Profile", role: "jobseeker" },
+  { href: "/dashboard/profile", label: "My Profile" },
   { href: "/dashboard/employer/jobs", label: "My Jobs", role: "employer" },
   { href: "/dashboard/employer/applicants", label: "Applications", role: "employer" },
 ];

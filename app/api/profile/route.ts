@@ -31,7 +31,7 @@ interface UserLean {
   firstName: string;
   lastName: string;
   email: string;
-  role: string;
+  role: "jobseeker" | "employer" | "admin";
 }
 
 interface ProfileBody {
@@ -45,6 +45,12 @@ interface ProfileBody {
   location?: string;
   skills?: string[];
   resumeName?: string;
+  // employer
+  companyName?: string;
+  companyWebsite?: string;
+  companySize?: string;
+  companyDescription?: string;
+  companyLogo?: string;
 }
 
 export async function GET(req: NextRequest) {
@@ -68,6 +74,11 @@ export async function GET(req: NextRequest) {
         profileImage: "",
         resumeUrl: "",
         resumeName: "",
+        companyName: "",
+        companyWebsite: "",
+        companySize: "",
+        companyDescription: "",
+        companyLogo: "",
       });
     }
 
@@ -95,6 +106,7 @@ export async function PUT(req: NextRequest) {
     const existing = await Profile.findOne({ user: dbUser._id });
 
     if (existing) {
+      // jobseeker images
       if (body.profileImage && existing.profileImage && body.profileImage!== existing.profileImage) {
         const oldKey = getFileKeyFromUrl(existing.profileImage);
         if (oldKey) { try { await utapi.deleteFiles(oldKey); } catch { /* ignore */ } }
@@ -109,6 +121,15 @@ export async function PUT(req: NextRequest) {
       }
       if (body.resumeUrl === "" && existing.resumeUrl) {
         const oldKey = getFileKeyFromUrl(existing.resumeUrl);
+        if (oldKey) { try { await utapi.deleteFiles(oldKey); } catch { /* ignore */ } }
+      }
+      // employer logo
+      if (body.companyLogo && existing.companyLogo && body.companyLogo!== existing.companyLogo) {
+        const oldKey = getFileKeyFromUrl(existing.companyLogo);
+        if (oldKey) { try { await utapi.deleteFiles(oldKey); } catch { /* ignore */ } }
+      }
+      if (body.companyLogo === "" && existing.companyLogo) {
+        const oldKey = getFileKeyFromUrl(existing.companyLogo);
         if (oldKey) { try { await utapi.deleteFiles(oldKey); } catch { /* ignore */ } }
       }
     }
@@ -157,6 +178,10 @@ export async function DELETE(req: NextRequest) {
       const k = getFileKeyFromUrl(profile.resumeUrl);
       if (k) keys.push(k);
     }
+    if (profile.companyLogo) {
+      const k = getFileKeyFromUrl(profile.companyLogo);
+      if (k) keys.push(k);
+    }
     if (keys.length) {
       try { await utapi.deleteFiles(keys); } catch { /* ignore */ }
     }
@@ -174,6 +199,11 @@ export async function DELETE(req: NextRequest) {
         profileImage: "",
         resumeUrl: "",
         resumeName: "",
+        companyName: "",
+        companyWebsite: "",
+        companySize: "",
+        companyDescription: "",
+        companyLogo: "",
       },
       { new: true }
     );
