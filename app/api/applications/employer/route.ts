@@ -1,10 +1,18 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { NextResponse, NextRequest } from "next/server";
 import dbConnect from "@/lib/db";
-import Application from "@/models/Application";
 import { verifyToken } from "@/lib/auth";
 
+// side-effect imports for Vercel populate
+import "@/models/Job";
+import "@/models/User";
+import Application from "@/models/Application";
+
+
+
 //all job applicants/jobSeekers all applications can be viewed by the employer who posted the job
-export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   try {
     await dbConnect();

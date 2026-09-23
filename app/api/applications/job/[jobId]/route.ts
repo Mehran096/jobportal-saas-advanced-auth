@@ -1,13 +1,19 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { NextResponse, NextRequest } from "next/server";
 import dbConnect from "@/lib/db";
+import { verifyToken } from "@/lib/auth";
+
+// side-effect imports for Vercel populate
+import "@/models/User";
 import Application from "@/models/Application";
 import Job from "@/models/Job";
-import { verifyToken } from "@/lib/auth";
+
 
 type Params = { params: Promise<{ jobId: string }> };
 
 //single job applicant/jobSeeker's single application for a job /employer can view single job's
-export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest, { params }: Params) {
   try {
     await dbConnect();
