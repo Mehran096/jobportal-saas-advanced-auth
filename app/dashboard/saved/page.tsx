@@ -38,7 +38,7 @@ export default function SavedJobsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <DashboardHeader />
-      <main className="max-w-7xl mx-auto p-4 sm:p-6">
+      <main className="max-w-7xl mb-16 mx-auto p-4 sm:p-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <Bookmark className="text-blue-600" /> Saved Jobs

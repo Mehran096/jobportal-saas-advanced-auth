@@ -174,7 +174,7 @@ export default function JobsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <DashboardHeader />
-      <main className="max-w-7xl mx-auto p-4 sm:p-6 pb-24 md:pb-6">
+      <main className="max-w-7xl mx-auto mb-16 p-4 sm:p-6 pb-24 md:pb-6">
         <h1 className="text-3xl font-bold mb-2">Find Your Dream Job</h1>
         <p className="text-gray-600 mb-6">Browse {jobs.length} open positions — {savedJobIds.length} saved</p>
 

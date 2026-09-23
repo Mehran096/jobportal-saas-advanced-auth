@@ -104,7 +104,7 @@ function JobDetailContent() {
   return (
     <div className="min-h-screen bg-gray-50">
       <DashboardHeader />
-      <div className="max-w-5xl mx-auto p-4 sm:p-6">
+      <div className="max-w-5xl mb-16 mx-auto p-4 sm:p-6">
         <div className="flex items-center gap-4 mb-6">
           <button onClick={() => router.back()} className="p-2 hover:bg-gray-200 rounded-lg transition"><ArrowLeft size={20} /></button>
           <h1 className="text-2xl font-bold text-gray-900">Job Details</h1>

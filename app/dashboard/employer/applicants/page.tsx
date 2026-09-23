@@ -89,7 +89,7 @@ function ApplicantsContent() {
   return (
     <div className="min-h-screen bg-gray-50">
       <DashboardHeader />
-      <main className="w-full max-w-6xl mx-auto p-3 sm:p-6 overflow-x-hidden">
+      <main className="w-full mb-16 max-w-6xl mx-auto p-3 sm:p-6 overflow-x-hidden">
         <div className="flex items-center gap-3 mb-6">
           <button onClick={() => router.back()} className="p-2 hover:bg-gray-100 rounded-lg shrink-0"><ArrowLeft size={20} /></button>
           <div className="min-w-0">

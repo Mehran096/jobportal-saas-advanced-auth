@@ -125,7 +125,7 @@ export default function MyApplicationDetailPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <DashboardHeader />
-      <main className="max-w-7xl mx-auto p-3 sm:p-6">
+      <main className="max-w-7xl mb-16 mx-auto p-3 sm:p-6">
         <button onClick={() => router.push("/dashboard/applications")} className="flex items-center gap-2 mb-4 text-sm px-3 py-2 rounded-lg border bg-white hover:bg-gray-50">
           <ArrowLeft size={16} /> Back to Applications
         </button>

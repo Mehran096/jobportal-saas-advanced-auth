@@ -90,7 +90,7 @@ export default function ApplicationsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <DashboardHeader />
-      <main className="max-w-4xl mx-auto p-4 sm:p-6 pb-24 md:pb-6">
+      <main className="max-w-4xl mb-16 mx-auto p-4 sm:p-6 pb-24 md:pb-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold">My Applications</h1>
           <p className="text-gray-600">Track all your job applications here - {applications.length} applied</p>
