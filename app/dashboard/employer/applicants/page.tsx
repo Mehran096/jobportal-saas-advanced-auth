@@ -76,7 +76,7 @@ function ApplicantsContent() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <DashboardHeader />
+        {/* <DashboardHeader /> */}
         <div className="max-w-6xl mx-auto p-4 sm:p-6">
           <div className="h-8 bg-gray-200 rounded w-1/3 mb-6 animate-pulse"></div>
           <div className="space-y-4">{[1, 2, 3].map((i) => <ApplicationSkeleton key={i} />)}</div>

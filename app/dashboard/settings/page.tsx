@@ -14,7 +14,7 @@ interface ExtendedUser { provider?: Provider }
 function Skeleton() {
   return (
     <>
-      <DashboardHeader />
+      {/* <DashboardHeader /> */}
       <div className="max-w-2xl mx-auto p-6 space-y-6 animate-pulse">
         <div className="h-8 w-32 bg-gray-200 rounded-lg"></div>
         

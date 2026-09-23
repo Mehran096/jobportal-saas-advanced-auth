@@ -26,7 +26,7 @@ type Provider = "credentials" | "google" | "both";
 function Skeleton() {
   return (
     <>
-      <DashboardHeader />
+      {/* <DashboardHeader /> */}
       <div className="max-w-xl mx-auto p-6 space-y-6 animate-pulse">
         <div className="h-8 w-56 bg-gray-200 rounded-lg"></div>
         <div className="h-4 w-40 bg-gray-100 rounded"></div>
