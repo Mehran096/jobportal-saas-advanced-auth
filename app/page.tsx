@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -7,15 +8,21 @@ import { Loader2 } from "lucide-react";
 export default function HomePage() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const isLoading = status === "loading";
 
   useEffect(() => {
-    if (status !== "loading") {
-      if (session?.user) {
-        router.push("/dashboard");
-      } else {
-        router.push("/login");
-      }
+    if (status === "loading") return;
+
+    if (!session?.user) {
+      router.replace("/login");
+      return;
+    }
+
+    const role = (session.user as { role?: string })?.role;
+
+    if (role === "admin") {
+      router.replace("/dashboard/admin");
+    } else {
+      router.replace("/dashboard");
     }
   }, [session, status, router]);
 

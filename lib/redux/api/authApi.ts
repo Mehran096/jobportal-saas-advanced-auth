@@ -1,4 +1,4 @@
-// lib/redux/api/authApi.ts - FINAL VERSION WITH CHANGE + SET PASSWORD
+// lib/redux/api/authApi.ts - FINAL WITH APPEAL + CHANGE + SET PASSWORD
 import { baseApi } from "./baseApi";
 
 export interface User {
@@ -9,8 +9,10 @@ export interface User {
   fullName: string;
   email: string;
   role: 'jobseeker' | 'employer' | 'admin';
-  provider: 'credentials' | 'google' | 'both'; // <-- ADD BOTH
+  provider: 'credentials' | 'google' | 'both';
   image?: string;
+  isBanned?: boolean;
+  bannedReason?: string;
 }
 
 interface AuthResponse {
@@ -60,7 +62,6 @@ export const authApi = baseApi.injectEndpoints({
       }),
     }),
 
-    // --- MY ACCOUNT ---
     getMyAccount: builder.query<MyAccountResponse, void>({
       query: () => "/auth/myaccount",
       providesTags: ["Auth"],
@@ -87,7 +88,6 @@ export const authApi = baseApi.injectEndpoints({
       invalidatesTags: ["Auth"],
     }),
 
-    // --- NEW: CHANGE PASSWORD (for credentials / both) ---
     changePassword: builder.mutation<MessageResponse, {
       currentPassword: string;
       newPassword: string;
@@ -99,7 +99,6 @@ export const authApi = baseApi.injectEndpoints({
       }),
     }),
 
-    // --- NEW: SET PASSWORD (for pure google -> both) ---
     setPassword: builder.mutation<MessageResponse, {
       newPassword: string;
     }>({
@@ -108,7 +107,19 @@ export const authApi = baseApi.injectEndpoints({
         method: "POST",
         body,
       }),
-      invalidatesTags: ["Auth"], // to refresh provider = both
+      invalidatesTags: ["Auth"],
+    }),
+
+    // --- NEW: BANNED USER APPEAL (public, no admin auth) ---
+    submitAppeal: builder.mutation<MessageResponse, {
+      email: string;
+      message: string;
+    }>({
+      query: (body) => ({
+        url: "/support/appeal",
+        method: "POST",
+        body,
+      }),
     }),
   }),
 });
@@ -122,4 +133,5 @@ export const {
   useDeleteMyAccountMutation,
   useChangePasswordMutation,
   useSetPasswordMutation,
+  useSubmitAppealMutation,
 } = authApi;

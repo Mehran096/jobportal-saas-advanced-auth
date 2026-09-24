@@ -10,6 +10,9 @@ export interface IUser extends Document {
   image?: string;
   resetPasswordToken?: string;
   resetPasswordExpire?: Date;
+  isBanned: boolean;
+  bannedAt?: Date;
+  bannedReason?: string;
   createdAt: Date;
   updatedAt: Date;
   readonly name: string;
@@ -50,7 +53,7 @@ const UserSchema: Schema<IUser> = new Schema(
     },
     provider: {
       type: String,
-      enum: ["credentials", "google", "both"], // <-- FIX ADDED "both"
+      enum: ["credentials", "google", "both"],
       default: "credentials",
       index: true,
     },
@@ -59,6 +62,13 @@ const UserSchema: Schema<IUser> = new Schema(
     },
     resetPasswordToken: String,
     resetPasswordExpire: Date,
+    isBanned: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    bannedAt: { type: Date },
+    bannedReason: { type: String, default: "" },
   },
   {
     timestamps: true,

@@ -16,6 +16,7 @@ import Job from "@/models/Job";
 import Application from "@/models/Application";
 import SavedJob from "@/models/SavedJob";
 import Profile from "@/models/Profile";
+import Appeal from "@/models/Appeal"; 
 import Notification from "@/models/Notification";
 import { UTApi } from "uploadthing/server";
 
@@ -126,6 +127,7 @@ export async function DELETE(req: NextRequest) {
         SavedJob.deleteMany({ job: { $in: jobIds } }),
         Notification.deleteMany({ user: user.id }),
         Profile.deleteOne({ user: user.id }),
+        Appeal.deleteMany({ userId: user.id }),
       ]);
     } else {
       await Promise.all([
@@ -133,6 +135,7 @@ export async function DELETE(req: NextRequest) {
         SavedJob.deleteMany({ user: user.id }),
         Notification.deleteMany({ user: user.id }),
         Profile.deleteOne({ user: user.id }),
+        Appeal.deleteMany({ userId: user.id }),
       ]);
     }
 
