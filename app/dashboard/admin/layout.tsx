@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import { LayoutDashboard, Users, Briefcase, Shield, LogOut, Menu, X, Flag } from "lucide-react";
 import { useGetAppealsQuery } from "@/lib/redux/api/adminApi";
 
+export const dynamic = 'force-dynamic';
+
 const menu = [
   { href: "/dashboard/admin", label: "Overview", icon: LayoutDashboard },
   { href: "/dashboard/admin/users", label: "Users", icon: Users },
@@ -100,7 +102,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { data: appealsData } = useGetAppealsQuery(undefined, {
     skip: role !== "admin",
   });
-  const appealsCount = appealsData?.appeals?.length || 0;
+  const appealsCount = appealsData?.appeals?.filter((a: { status: string }) => a.status === "pending").length || 0;
 
   useEffect(() => {
     if (status === "loading") return;
@@ -126,7 +128,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] flex">
-      <aside className="hidden lg:flex w-55 bg-black text-white p-4 fixed h-full flex-col justify-between">
+      <aside className="hidden lg:flex w-64 bg-black text-white p-4 fixed h-full flex-col justify-between">
         <SidebarInner pathname={pathname} onLogout={handleLogout} loggingOut={loggingOut} appealsCount={appealsCount} />
       </aside>
 
@@ -139,7 +141,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       )}
 
-      <div className="flex-1 lg:ml-55 w-full">
+      <div className="flex-1 lg:ml-64 w-full">
         <div className="lg:hidden sticky top-0 bg-white border-b px-4 py-3 flex items-center justify-between z-30">
           <button onClick={() => setOpen(true)} className="p-2">
             <Menu size={20} />

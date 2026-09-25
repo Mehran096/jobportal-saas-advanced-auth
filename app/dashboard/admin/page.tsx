@@ -2,6 +2,8 @@
 import { useGetAdminStatsQuery } from "@/lib/redux/api/adminApi";
 import { Users, Building2, Briefcase, FileText } from "lucide-react";
 
+export const dynamic = 'force-dynamic';
+
 export default function AdminOverview() {
   const { data, isLoading } = useGetAdminStatsQuery();
 

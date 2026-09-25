@@ -4,6 +4,8 @@ import { useGetAllUsersAdminQuery, useBanUserMutation } from "@/lib/redux/api/ad
 import AdminPagination from "@/app/components/AdminPagination";
 import { Loader2, X, Ban } from "lucide-react";
 
+export const dynamic = 'force-dynamic';
+
 export default function AdminUsersPage() {
   const [role, setRole] = useState("");
   const [search, setSearch] = useState("");

@@ -1,4 +1,7 @@
 // app/api/admin/jobs/route.ts
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import dbConnect from "@/lib/db";
 import Job from "@/models/Job";
 import { NextRequest, NextResponse } from "next/server";

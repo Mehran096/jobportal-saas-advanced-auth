@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Ban, Mail, MessageSquare, Loader2, CheckCircle, ArrowLeft } from "lucide-react";
 import { useSubmitAppealMutation } from "@/lib/redux/api/authApi";
 
-export default function BannedPage() {
+export const dynamic = 'force-dynamic';
+
+function BannedContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const initialEmail = searchParams.get("email") || "";
@@ -56,7 +58,7 @@ export default function BannedPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-600 to-zinc-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-to-br from-red-600 to-zinc-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-6">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl mb-4 shadow-lg">
@@ -127,5 +129,17 @@ export default function BannedPage() {
         <p className="text-center text-[11px] text-white/60 mt-4">Appeals are reviewed within 24-48 hours</p>
       </div>
     </div>
+  );
+}
+
+export default function BannedPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen grid place-items-center">
+        <div className="text-xs text-gray-500">Loading...</div>
+      </div>
+    }>
+      <BannedContent />
+    </Suspense>
   );
 }

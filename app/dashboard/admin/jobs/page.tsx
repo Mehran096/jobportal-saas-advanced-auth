@@ -4,6 +4,8 @@ import { useGetAllJobsAdminQuery, useDeleteJobAdminMutation } from "@/lib/redux/
 import AdminPagination from "@/app/components/AdminPagination";
 import { Trash2, Loader2 } from "lucide-react";
 
+export const dynamic = 'force-dynamic';
+
 export default function AdminJobsPage() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");

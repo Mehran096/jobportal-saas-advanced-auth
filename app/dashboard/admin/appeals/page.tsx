@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useGetAppealsQuery, useReviewAppealMutation } from "@/lib/redux/api/adminApi";
 import { Loader2, Check, X, Mail, Calendar, AlertTriangle } from "lucide-react";
 
+export const dynamic = 'force-dynamic';
+
 export default function AppealsPage() {
   const { data, isLoading, isError } = useGetAppealsQuery();
   const [reviewAppeal, { isLoading: isReviewing }] = useReviewAppealMutation();

@@ -1,8 +1,10 @@
 "use client";
+import { Suspense, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect } from "react";
 
-export default function AuthErrorPage() {
+export const dynamic = 'force-dynamic';
+
+function AuthErrorContent() {
   const params = useSearchParams();
   const router = useRouter();
   const error = params.get("error");
@@ -13,7 +15,6 @@ export default function AuthErrorPage() {
     }
   }, [error, router]);
 
-  // No useState, no setMsg - fixes warning
   const msg =
     error === "GOOGLE_ONLY"
       ? "This account uses Google login only. Please login with Google."
@@ -43,5 +44,17 @@ export default function AuthErrorPage() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function AuthErrorPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen grid place-items-center">
+        <div className="text-xs text-gray-500">Loading...</div>
+      </div>
+    }>
+      <AuthErrorContent />
+    </Suspense>
   );
 }
