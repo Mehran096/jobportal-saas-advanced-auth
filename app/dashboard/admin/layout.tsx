@@ -50,7 +50,7 @@ function SidebarInner({
         </div>
         <nav className="space-y-1">
           {menu.map((m) => {
-            const active = pathname === m.href || pathname.startsWith(m.href + "/");
+            const active = pathname === m.href
             const isAppeals = m.href.includes("appeals");
             return (
               <Link
