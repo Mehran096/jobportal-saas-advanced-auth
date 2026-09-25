@@ -149,7 +149,7 @@ export default function MyApplicationDetailPage() {
               <>
                 {/* Desktop iframe */}
                 <div className="hidden sm:block flex-1">
-                  <iframe src={`${profile.resumeUrl}#toolbar=0&navpanes=0`} className="w-full h-full min-h-[600px]" title="CV" />
+                  <iframe src={`${profile.resumeUrl}#toolbar=0&navpanes=0`} className="w-full h-full min-h-150" title="CV" />
                 </div>
                 {/* Mobile small preview card */}
                 <div className="sm:hidden p-3">
