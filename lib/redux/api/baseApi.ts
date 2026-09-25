@@ -23,6 +23,6 @@ export const baseApi = createApi({
   reducerPath: 'baseApi',
   baseQuery: baseQueryWithReauth,
   keepUnusedDataFor: 0,
-  tagTypes: ["Jobs", "Applications", "Notifications", "JobSeeker", "Employer", "Auth", "Profile", "SavedJobs", "Admin"],
+  tagTypes: ["Jobs", "Applications", "Notifications", "JobSeeker", "Employer", "Auth", "Profile", "SavedJobs", "Admin", "Report"],
   endpoints: () => ({}),
 });

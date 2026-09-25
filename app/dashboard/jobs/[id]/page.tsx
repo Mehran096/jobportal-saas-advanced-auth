@@ -12,7 +12,8 @@ import {
   useUnsaveJobMutation,
 } from "@/lib/redux/api/jobseekerApi";
 import { useGetProfileQuery } from "@/lib/redux/api/profileApi";
-import { ArrowLeft, Building, MapPin, Calendar, Users, Loader2, Bookmark, BookmarkCheck, FileText, Building2, Globe } from "lucide-react";
+import { useReportUserMutation, ReportReason } from "@/lib/redux/api/reportApi";
+import { ArrowLeft, Building, MapPin, Calendar, Users, Loader2, Bookmark, BookmarkCheck, FileText, Building2, Globe, Flag } from "lucide-react";
 import toast from "react-hot-toast";
 import DashboardHeader from "@/app/components/DashboardHeader";
 import DashboardMobileNav from "@/app/components/DashboardMobileNav";
@@ -38,15 +39,19 @@ function JobDetailContent() {
   const [applyForJob, { isLoading: isApplying }] = useApplyForJobMutation();
   const [saveJob, { isLoading: isSaving }] = useSaveJobMutation();
   const [unsaveJob, { isLoading: isUnsaving }] = useUnsaveJobMutation();
+  const [reportUser, { isLoading: isReporting }] = useReportUserMutation();
 
   const [showNoCvModal, setShowNoCvModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState<ReportReason>("fake_job");
+  const [reportDetails, setReportDetails] = useState("");
 
   const job = data?.job;
   const companyProfile = data?.companyProfile;
   const applicationCount = data?.applicationCount || 0;
   const appliedJobIds = Array.isArray(applications)
-   ? applications.map((a: { job?: { _id: string } | string }) => typeof a.job === 'object'? a.job?._id : a.job)
+  ? applications.map((a: { job?: { _id: string } | string }) => typeof a.job === 'object'? a.job?._id : a.job)
     : [];
   const alreadyApplied = appliedJobIds.includes(jobId);
   const isSaved = savedData?.savedJobs?.some((j) => j._id === jobId);
@@ -87,6 +92,41 @@ function JobDetailContent() {
     } catch { toast.error("Failed"); }
   };
 
+    const handleReportSubmit = async () => {
+    try {
+      const rawPostedBy = job?.postedBy as unknown;
+
+      let postedById: string | undefined;
+      if (typeof rawPostedBy === "string") {
+        postedById = rawPostedBy;
+      } else if (
+        rawPostedBy &&
+        typeof rawPostedBy === "object" &&
+        "_id" in rawPostedBy
+      ) {
+        postedById = (rawPostedBy as { _id: string })._id;
+      }
+
+      if (!postedById) {
+        toast.error("Cannot report, owner not found");
+        return;
+      }
+
+      await reportUser({
+        reportedUser: postedById,
+        reason: reportReason,
+        details: reportDetails,
+        jobId: jobId
+      }).unwrap();
+      toast.success("Report sent to admin");
+      setShowReportModal(false);
+      setReportDetails("");
+    } catch (err) {
+      const apiErr = err as ApiError;
+      toast.error(apiErr?.data?.message || "Failed to report");
+    }
+  };
+
   if (isLoading || appsLoading) {
     return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={32} /></div>
   }
@@ -114,10 +154,16 @@ function JobDetailContent() {
           <div className="flex-1">
             <div className="flex items-start justify-between gap-4">
               <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 flex-1">{job.title}</h2>
-              <button onClick={handleToggleSave} disabled={isSaving || isUnsaving}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium border transition ${isSaved? "bg-purple-50 border-purple-200 text-purple-700" : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"}`}>
-                {isSaved? <BookmarkCheck size={18} /> : <Bookmark size={18} />} {isSaved? "Saved" : "Save"}
-              </button>
+              <div className="flex items-center gap-2">
+                <button onClick={() => setShowReportModal(true)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl font-medium border bg-white border-gray-300 text-gray-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition">
+                  <Flag size={16} /> Report
+                </button>
+                <button onClick={handleToggleSave} disabled={isSaving || isUnsaving}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium border transition ${isSaved? "bg-purple-50 border-purple-200 text-purple-700" : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"}`}>
+                  {isSaved? <BookmarkCheck size={18} /> : <Bookmark size={18} />} {isSaved? "Saved" : "Save"}
+                </button>
+              </div>
             </div>
             <div className="flex flex-wrap gap-x-5 gap-y-2 text-gray-600 mb-4 text-sm">
               <div className="flex items-center gap-2"><Building size={16} className="text-gray-400" /> {companyProfile?.companyName || job.company}</div>
@@ -133,45 +179,36 @@ function JobDetailContent() {
             <p className="text-gray-700 leading-relaxed wrap-break-word overflow-hidden whitespace-pre-line">{job.description}</p>
           </div>
 
-          {/* PROFESSIONAL COMPANY PROFILE - MOBILE FIXED */}
-<div className="border-t pt-6 mt-6">
-  <h3 className="font-bold text-[13px] tracking-wide text-gray-900 mb-3 flex items-center gap-2"><Building2 size={16} className="text-blue-600" /> ABOUT COMPANY</h3>
-  <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 sm:p-5 border">
-
-    {/* Mobile: column | Desktop: row */}
-    <div className="flex flex-col sm:flex-row gap-4 sm:items-start">
-
-      {/* 1. LOGO DIV FIRST */}
-      <div className="w-16 h-16 sm:w-14 sm:h-14 rounded-xl bg-white overflow-hidden relative flex-shrink-0 ring-1 ring-gray-200 self-start">
-        {companyProfile?.companyLogo? (
-          <Image src={companyProfile.companyLogo} alt={companyProfile.companyName || "logo"} fill className="object-cover" unoptimized priority />
-        ) : (
-          <div className="flex items-center justify-center h-full text-gray-400"><Building2 size={24} /></div>
-        )}
-      </div>
-
-      {/* 2. FULL DETAIL UNDER LOGO ON MOBILE */}
-      <div className="flex-1 min-w-0 w-full">
-        <p className="font-bold text-[16px] sm:text-[15px] text-gray-900 leading-tight">{companyProfile?.companyName || job.company || "ITBS - IT Business Solutions"}</p>
-
-        <div className="flex flex-col gap-1.5 mt-3 text-[13px] text-gray-600">
-          <span className="flex items-center gap-2"><MapPin size={14} className="text-gray-400"/> {companyProfile?.location || job.location || "Lahore"}</span>
-          <span className="flex items-center gap-2"><Users size={14} className="text-gray-400"/> {companyProfile?.companySize? `${companyProfile.companySize} employees` : "500+ employees"}</span>
-          {companyProfile?.companyWebsite && (
-            <a href={`https://${companyProfile.companyWebsite.replace(/^https?:\/\//,'')}`} target="_blank" className="flex items-center gap-2 text-blue-600 hover:underline break-all"><Globe size={14}/> {companyProfile.companyWebsite}</a>
-          )}
-          {companyProfile?.phone && (
-            <span className="flex items-center gap-2">📞 {companyProfile.phone}</span>
-          )}
-        </div>
-
-        <p className="text-[13px] text-gray-600 mt-4 leading-[1.7] whitespace-pre-line">
-          {companyProfile?.companyDescription || "This employer has not added a company description yet."}
-        </p>
-      </div>
-    </div>
-  </div>
-</div>
+          <div className="border-t pt-6 mt-6">
+            <h3 className="font-bold text-[13px] tracking-wide text-gray-900 mb-3 flex items-center gap-2"><Building2 size={16} className="text-blue-600" /> ABOUT COMPANY</h3>
+            <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 sm:p-5 border">
+              <div className="flex flex-col sm:flex-row gap-4 sm:items-start">
+                <div className="w-16 h-16 sm:w-14 sm:h-14 rounded-xl bg-white overflow-hidden relative flex-shrink-0 ring-1 ring-gray-200 self-start">
+                  {companyProfile?.companyLogo? (
+                    <Image src={companyProfile.companyLogo} alt={companyProfile.companyName || "logo"} fill className="object-cover" unoptimized priority />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-gray-400"><Building2 size={24} /></div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0 w-full">
+                  <p className="font-bold text-[16px] sm:text-[15px] text-gray-900 leading-tight">{companyProfile?.companyName || job.company || "ITBS - IT Business Solutions"}</p>
+                  <div className="flex flex-col gap-1.5 mt-3 text-[13px] text-gray-600">
+                    <span className="flex items-center gap-2"><MapPin size={14} className="text-gray-400"/> {companyProfile?.location || job.location || "Lahore"}</span>
+                    <span className="flex items-center gap-2"><Users size={14} className="text-gray-400"/> {companyProfile?.companySize? `${companyProfile.companySize} employees` : "500+ employees"}</span>
+                    {companyProfile?.companyWebsite && (
+                      <a href={`https://${companyProfile.companyWebsite.replace(/^https?:\/\//,'')}`} target="_blank" className="flex items-center gap-2 text-blue-600 hover:underline break-all"><Globe size={14}/> {companyProfile.companyWebsite}</a>
+                    )}
+                    {companyProfile?.phone && (
+                      <span className="flex items-center gap-2">📞 {companyProfile.phone}</span>
+                    )}
+                  </div>
+                  <p className="text-[13px] text-gray-600 mt-4 leading-[1.7] whitespace-pre-line">
+                    {companyProfile?.companyDescription || "This employer has not added a company description yet."}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <div className="border-t pt-5 mt-5">
             <button onClick={handleApplyClick} disabled={alreadyApplied || isApplying}
@@ -183,6 +220,41 @@ function JobDetailContent() {
           </div>
         </div>
       </div>
+
+      {/* REPORT MODAL */}
+      {showReportModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2"><Flag size={18} className="text-red-500" /> Report this Job</h3>
+            <p className="text-sm text-gray-600 mt-1">Help us keep jobs safe. Why are you reporting?</p>
+
+            <div className="mt-4 space-y-2">
+              {[
+                { value: "fake_job", label: "Fake Job / Fake Salary" },
+                { value: "spam", label: "Spam / Duplicate" },
+                { value: "scam", label: "Scam / Asking for money" },
+                { value: "abuse", label: "Abuse / Inappropriate" },
+                { value: "other", label: "Other" },
+              ].map((r) => (
+                <label key={r.value} className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition ${reportReason === r.value? "border-red-500 bg-red-50" : "border-gray-200 hover:bg-gray-50"}`}>
+                  <input type="radio" name="reason" value={r.value} checked={reportReason === r.value} onChange={() => setReportReason(r.value as ReportReason)} className="accent-red-600" />
+                  <span className="text-sm font-medium text-gray-800">{r.label}</span>
+                </label>
+              ))}
+            </div>
+
+            <textarea value={reportDetails} onChange={(e) => setReportDetails(e.target.value)} placeholder="Add more details (optional) max 500 chars"
+              maxLength={500} rows={3} className="w-full mt-4 p-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none resize-none" />
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button onClick={() => setShowReportModal(false)} className="px-4 py-2 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm font-medium">Cancel</button>
+              <button onClick={handleReportSubmit} disabled={isReporting} className="px-5 py-2 rounded-xl bg-red-600 text-white hover:bg-red-700 text-sm font-medium flex items-center gap-2 disabled:opacity-60">
+                {isReporting && <Loader2 size={16} className="animate-spin" />} Submit Report
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showNoCvModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">

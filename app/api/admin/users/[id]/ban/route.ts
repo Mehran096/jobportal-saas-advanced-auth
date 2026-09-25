@@ -6,7 +6,7 @@ import { verifyAdmin } from "@/lib/adminAuth";
 
 interface BanRequestBody {
   reason?: string;
-  action?: "ban" | "unban";
+  action?: "ban" | "unban" | "toggle";
 }
 
 export async function PATCH(
@@ -34,30 +34,32 @@ export async function PATCH(
 
     let body: BanRequestBody = {};
     try {
-      const json = (await req.json()) as BanRequestBody;
-      body = json;
+      body = (await req.json()) as BanRequestBody;
     } catch {
-      // no body = toggle mode
+      body = { action: "toggle" };
     }
 
-    if (body.action === "ban") {
+    const action = body.action || "toggle";
+    const reason = body.reason?.trim() || "Violated terms of service";
+
+    if (action === "ban") {
       targetUser.isBanned = true;
-      targetUser.bannedAt = new Date();
-      targetUser.bannedReason = body.reason?.trim() || "Violated terms of service";
-    } else if (body.action === "unban") {
+      targetUser.bannedAt = new Date() as unknown as undefined; // schema Date
+      targetUser.bannedReason = reason;
+    } else if (action === "unban") {
       targetUser.isBanned = false;
       targetUser.bannedReason = "";
-      targetUser.bannedAt = undefined;
+      (targetUser as unknown as { bannedAt: unknown }).bannedAt = null;
     } else {
-      // backward compat toggle
+      // toggle - backward compatible
       if (!targetUser.isBanned) {
         targetUser.isBanned = true;
-        targetUser.bannedAt = new Date();
-        targetUser.bannedReason = body.reason?.trim() || "Violated terms of service";
+        targetUser.bannedAt = new Date() as unknown as undefined;
+        targetUser.bannedReason = reason;
       } else {
         targetUser.isBanned = false;
         targetUser.bannedReason = "";
-        targetUser.bannedAt = undefined;
+        (targetUser as unknown as { bannedAt: unknown }).bannedAt = null;
       }
     }
 

@@ -3,8 +3,9 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Users, Briefcase, Shield, LogOut, Menu, X, Flag } from "lucide-react";
+import { LayoutDashboard, Users, Briefcase, Shield, LogOut, Menu, X, Flag, AlertTriangle } from "lucide-react";
 import { useGetAppealsQuery } from "@/lib/redux/api/adminApi";
+import { useGetReportsQuery } from "@/lib/redux/api/reportApi";
 
 export const dynamic = 'force-dynamic';
 
@@ -12,6 +13,7 @@ const menu = [
   { href: "/dashboard/admin", label: "Overview", icon: LayoutDashboard },
   { href: "/dashboard/admin/users", label: "Users", icon: Users },
   { href: "/dashboard/admin/jobs", label: "Jobs", icon: Briefcase },
+  { href: "/dashboard/admin/reports", label: "Reports", icon: AlertTriangle, badgeKey: "reports" },
   { href: "/dashboard/admin/appeals", label: "Appeals", icon: Flag, badgeKey: "appeals" },
 ];
 
@@ -25,12 +27,14 @@ function SidebarInner({
   onLogout,
   loggingOut,
   appealsCount,
+  reportsCount,
 }: {
   pathname: string;
   onClose?: () => void;
   onLogout: () => void;
   loggingOut: boolean;
   appealsCount: number;
+  reportsCount: number;
 }) {
   return (
     <>
@@ -51,22 +55,23 @@ function SidebarInner({
         <nav className="space-y-1">
           {menu.map((m) => {
             const active = pathname === m.href
-            const isAppeals = m.href.includes("appeals");
+            const count = m.badgeKey === "appeals"? appealsCount : m.badgeKey === "reports"? reportsCount : 0;
+            const showBadge = (m.badgeKey === "appeals" || m.badgeKey === "reports") && count > 0;
             return (
               <Link
                 key={m.href}
                 href={m.href}
                 onClick={onClose}
                 className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm transition ${
-                  active ? "bg-white text-black" : "text-gray-400 hover:text-white hover:bg-zinc-800"
+                  active? "bg-white text-black" : "text-gray-400 hover:text-white hover:bg-zinc-800"
                 }`}
               >
                 <span className="flex items-center gap-3">
                   <m.icon size={16} /> {m.label}
                 </span>
-                {isAppeals && appealsCount > 0 && (
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${active ? "bg-red-500 text-white" : "bg-red-500 text-white"}`}>
-                    {appealsCount}
+                {showBadge && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-red-500 text-white">
+                    {count}
                   </span>
                 )}
               </Link>
@@ -80,7 +85,7 @@ function SidebarInner({
           disabled={loggingOut}
           className="flex items-center gap-2 w-full px-3 py-2.5 rounded-xl text-sm text-gray-400 hover:text-white hover:bg-zinc-800 disabled:opacity-50 text-left"
         >
-          <LogOut size={16} /> {loggingOut ? "Logging out..." : "Logout"}
+          <LogOut size={16} /> {loggingOut? "Logging out..." : "Logout"}
         </button>
         <Link href="/" className="flex items-center gap-2 text-xs text-gray-400 hover:text-white px-3">
           Back to site
@@ -98,11 +103,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [loggingOut, setLoggingOut] = useState(false);
   const role = (session?.user as SessionUser | undefined)?.role;
 
-  // NEW: fetch appeals count for badge
   const { data: appealsData } = useGetAppealsQuery(undefined, {
-    skip: role !== "admin",
+    skip: role!== "admin",
   });
+  const { data: reportsData } = useGetReportsQuery(undefined, {
+    skip: role!== "admin",
+  });
+
   const appealsCount = appealsData?.appeals?.filter((a: { status: string }) => a.status === "pending").length || 0;
+  const reportsCount = reportsData?.reports?.filter((r) => r.status === "pending").length || 0;
 
   useEffect(() => {
     if (status === "loading") return;
@@ -110,7 +119,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       router.replace("/login?callbackUrl=/dashboard/admin");
       return;
     }
-    if (role && role !== "admin") router.replace("/");
+    if (role && role!== "admin") router.replace("/");
   }, [session, status, role, router]);
 
   const handleLogout = async () => {
@@ -124,19 +133,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return <div className="min-h-screen flex items-center justify-center text-sm">Checking admin access...</div>;
   }
 
-  if (!session || role !== "admin") return null;
+  if (!session || role!== "admin") return null;
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] flex">
       <aside className="hidden lg:flex w-64 bg-black text-white p-4 fixed h-full flex-col justify-between">
-        <SidebarInner pathname={pathname} onLogout={handleLogout} loggingOut={loggingOut} appealsCount={appealsCount} />
+        <SidebarInner pathname={pathname} onLogout={handleLogout} loggingOut={loggingOut} appealsCount={appealsCount} reportsCount={reportsCount} />
       </aside>
 
       {open && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
           <div className="flex-1 bg-black/60" onClick={() => setOpen(false)} />
           <div className="w-65 bg-black text-white p-4 flex flex-col justify-between">
-            <SidebarInner pathname={pathname} onClose={() => setOpen(false)} onLogout={handleLogout} loggingOut={loggingOut} appealsCount={appealsCount} />
+            <SidebarInner pathname={pathname} onClose={() => setOpen(false)} onLogout={handleLogout} loggingOut={loggingOut} appealsCount={appealsCount} reportsCount={reportsCount} />
           </div>
         </div>
       )}

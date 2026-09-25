@@ -1,4 +1,4 @@
-// lib/redux/api/adminApi.ts - FINAL
+// lib/redux/api/adminApi.ts - FINAL CLEAN - ONLY banUser
 import { baseApi } from "./baseApi";
 
 export interface AdminStats {
@@ -39,7 +39,7 @@ export interface AdminJob {
     firstName: string;
     lastName: string;
     email: string;
-  };
+  } | null;
   createdAt: string;
 }
 
@@ -82,7 +82,7 @@ export const adminApi = baseApi.injectEndpoints({
     >({
       query: ({ role, search, page = 1, limit = 10 }) => {
         const params = new URLSearchParams();
-        if (role && role !== "All") params.append("role", role);
+        if (role && role!== "All") params.append("role", role);
         if (search) params.append("search", search);
         params.append("page", String(page));
         params.append("limit", String(limit));
@@ -91,17 +91,12 @@ export const adminApi = baseApi.injectEndpoints({
       providesTags: ["Admin"],
     }),
 
-    toggleBanUser: builder.mutation<{ message: string; user: AdminUser }, string>({
-      query: (id) => ({
-        url: `/admin/users/${id}/ban`,
-        method: "PATCH",
-      }),
-      invalidatesTags: ["Admin"],
-    }),
-
-    // FIXED: was POST /admin/users/ban — now PATCH /admin/users/[id]/ban (your perfect route)
-    banUser: builder.mutation<{ message: string; user: AdminUser }, { userId: string; reason?: string; action: "ban" | "unban" }>({
-      query: ({ userId, reason, action }) => ({
+    // ONLY ban system - use everywhere
+    banUser: builder.mutation<
+      { message: string; user: AdminUser },
+      { userId: string; reason?: string; action?: "ban" | "unban" }
+    >({
+      query: ({ userId, reason, action = "ban" }) => ({
         url: `/admin/users/${userId}/ban`,
         method: "PATCH",
         body: { reason, action },
@@ -136,10 +131,13 @@ export const adminApi = baseApi.injectEndpoints({
       providesTags: ["Admin"],
     }),
 
-    reviewAppeal: builder.mutation<{ message: string; appeal: Appeal }, { id: string; decision: "approved" | "rejected"; adminNote?: string }>({
+    reviewAppeal: builder.mutation<
+      { message: string; appeal: Appeal },
+      { id: string; decision: "approved" | "rejected"; adminNote?: string }
+    >({
       query: ({ id, decision, adminNote }) => ({
         url: `/admin/appeals/${id}`,
-        method: "POST", // matches your POST route.ts
+        method: "POST",
         body: { decision, adminNote },
       }),
       invalidatesTags: ["Admin"],
@@ -150,7 +148,6 @@ export const adminApi = baseApi.injectEndpoints({
 export const {
   useGetAdminStatsQuery,
   useGetAllUsersAdminQuery,
-  useToggleBanUserMutation,
   useBanUserMutation,
   useGetAllJobsAdminQuery,
   useDeleteJobAdminMutation,
