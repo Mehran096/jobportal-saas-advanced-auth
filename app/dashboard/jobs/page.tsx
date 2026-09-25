@@ -16,7 +16,7 @@ import {
   useUnsaveJobMutation,
   type Job
 } from "@/lib/redux/api/jobseekerApi";
-import { Briefcase, MapPin, Bookmark, BookmarkCheck, Search, TrendingUp, Users, X, Loader2 } from "lucide-react";
+import { Briefcase, MapPin, Bookmark, BookmarkCheck, Search, Users, X, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import DashboardMobileNav from "@/app/components/DashboardMobileNav";
 
@@ -85,7 +85,7 @@ export default function JobsPage() {
   const handleSearchChange = useCallback((val: string) => { setSearch(val); setCurrentPage(1); }, []);
   const handleLocationChange = useCallback((val: string) => { setLocation(val); setCurrentPage(1); }, []);
   const handlePeopleSearch = useCallback((q: string) => { setSearch(q); setCurrentPage(1); window.scrollTo({ top: 0, behavior: "smooth" }); }, []);
-  const clearFilters = useCallback(() => { setJobType(""); setMinSalary(""); setDatePosted(""); setCurrentPage(1); }, []);
+  //const clearFilters = useCallback(() => { setJobType(""); setMinSalary(""); setDatePosted(""); setCurrentPage(1); }, []);
   const clearAll = useCallback(() => { setSearch(""); setLocation(""); setJobType(""); setMinSalary(""); setDatePosted(""); setCurrentPage(1); }, []);
 
   const paginatedJobs = useMemo(() => {

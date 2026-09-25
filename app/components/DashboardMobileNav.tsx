@@ -57,7 +57,7 @@ export default function DashboardMobileNav() {
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-50">
-      <div className="flex justify-around items-center h-[64px] px-1">
+      <div className="flex justify-around items-center h-4 px-1">
         {links.map((link) => {
           const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`);
           const Icon = link.icon;
@@ -72,7 +72,7 @@ export default function DashboardMobileNav() {
               <div className="relative">
                 <Icon size={20} strokeWidth={isActive? 2.5 : 2} />
                 {link.showBadge && savedCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-[10px] font-bold w-[16px] h-[16px] rounded-full flex items-center justify-center">
+                  <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
                     {savedCount > 9? "9+" : savedCount}
                   </span>
                 )}

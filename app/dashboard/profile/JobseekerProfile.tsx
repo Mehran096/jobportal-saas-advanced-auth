@@ -124,7 +124,7 @@ function ProfileForm() {
     <div className="min-h-screen bg-white sm:bg-[#f8fafc]">
       <main className="w-full max-w-6xl mx-auto pb-24 sm:pb-6 px-0 sm:px-4 md:px-8">
         {/* Header compact */}
-        <div className="mx-3 sm:mx-0 mt-3 sm:mt-6 relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-600 to-indigo-600 text-white rounded-2xl sm:rounded-[20px] p-4 sm:p-6 shadow-sm">
+        <div className="mx-3 sm:mx-0 mt-3 sm:mt-6 relative overflow-hidden bg-linear-to-br from-blue-600 via-blue-600 to-indigo-600 text-white rounded-2xl sm:rounded-[20px] p-4 sm:p-6 shadow-sm">
           <h1 className="text-[15px] sm:text-[20px] font-bold flex items-center gap-2"><Sparkles size={16} /> My Profile</h1>
           <p className="text-blue-100 text-[11px] sm:text-[13px] mt-1 leading-snug">{hasProfileData? "Update CV via Replace CV below." : "CV required — Save disabled until upload."}</p>
         </div>
@@ -208,7 +208,7 @@ function ProfileForm() {
       e.target.style.height = 'auto';
       e.target.style.height = Math.min(e.target.scrollHeight, 200) + 'px';
     }}
-    className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-[13px] bg-gray-50/50 outline-none focus:ring-1 focus:ring-blue-500 resize-y min-h-[80px] max-h-[200px] overflow-y-auto"
+    className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-[13px] bg-gray-50/50 outline-none focus:ring-1 focus:ring-blue-500 resize-y min-h-20 max-h-50 overflow-y-auto"
     placeholder="Tell about yourself..."
   />
 </div>
@@ -218,7 +218,7 @@ function ProfileForm() {
                 <div className="flex flex-wrap gap-1.5 mt-2">{form.skills.map((s, i) => <span key={i} className="bg-blue-50 text-blue-700 border border-blue-100 px-2.5 py-1 rounded-full text-[11px] flex items-center gap-1">{s} <X size={12} className="cursor-pointer" onClick={() => setForm({...form, skills: form.skills.filter((_, idx) => idx!== i) })} /></span>)}</div>
               </div>
             </div>
-            <button disabled={isDisabled} onClick={handleSave} className={`mt-4 w-full font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 text-[13px] transition ${isCV_missing? "bg-gray-200 text-gray-500 cursor-not-allowed" : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90 disabled:opacity-50"}`}>
+            <button disabled={isDisabled} onClick={handleSave} className={`mt-4 w-full font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 text-[13px] transition ${isCV_missing? "bg-gray-200 text-gray-500 cursor-not-allowed" : "bg-linear-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90 disabled:opacity-50"}`}>
               {isBusy? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} {isCV_missing? "Upload CV to Save" : isBusy? "Uploading..." : isFromJob? "Save & Apply" : "Save Profile"}
             </button>
             {isCV_missing && <p className="text-[10px] text-amber-600 mt-2 text-center flex items-center justify-center gap-1"><AlertCircle size={10} /> CV required to save</p>}
@@ -256,7 +256,7 @@ function ProfileForm() {
       )}
 
       {showPreview && pdfToShow && (
-        <div className="fixed inset-0 z-[100] bg-white hidden sm:flex flex-col">
+        <div className="fixed inset-0 z-100 bg-white hidden sm:flex flex-col">
           <div className="flex items-center justify-between p-3 border-b bg-white">
             <h3 className="text-[13px] font-semibold truncate">{form.resumeName}</h3>
             <button onClick={()=>setShowPreview(false)} className="p-1.5 bg-gray-100 rounded-full"><X size={16}/></button>

@@ -3,25 +3,21 @@ export const dynamic = 'force-dynamic';
 
 import Link from "next/link";
 import DashboardHeader from "@/app/components/DashboardHeader";
-import {
-  useGetMyJobsQuery,
-  useDeleteJobMutation
-} from "@/lib/redux/api/employerApi";
+import { useGetMyJobsQuery, useDeleteJobMutation } from "@/lib/redux/api/employerApi";
 import { Trash2, Edit, Users, Plus, MapPin, Calendar, Briefcase, Eye } from "lucide-react";
 import DashboardMobileNav from "@/app/components/DashboardMobileNav";
 
 const JobCardSkeleton = () => (
-  <div className="bg-white p-6 rounded-xl shadow-sm border animate-pulse">
-    <div className="h-6 bg-gray-200 rounded w-3/4 mb-3"></div>
-    <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
-    <div className="flex gap-4 mb-4">
-      <div className="h-4 bg-gray-200 rounded w-24"></div>
-      <div className="h-4 bg-gray-200 rounded w-24"></div>
+  <div className="bg-white p-4 rounded-xl border animate-pulse">
+    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+    <div className="h-3 bg-gray-200 rounded w-1/2 mb-3"></div>
+    <div className="flex gap-2 mb-3">
+      <div className="h-3 bg-gray-200 rounded w-16"></div>
+      <div className="h-3 bg-gray-200 rounded w-16"></div>
     </div>
-    <div className="flex gap-2">
-      <div className="h-9 bg-gray-200 rounded w-28"></div>
-      <div className="h-9 bg-gray-200 rounded w-20"></div>
-      <div className="h-9 bg-gray-200 rounded w-20"></div>
+    <div className="grid grid-cols-2 gap-2">
+      <div className="h-8 bg-gray-200 rounded"></div>
+      <div className="h-8 bg-gray-200 rounded"></div>
     </div>
   </div>
 );
@@ -32,7 +28,7 @@ export default function MyJobsPage() {
   const [deleteJob, { isLoading: isDeleting }] = useDeleteJobMutation();
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this job? This action cannot be undone.")) return;
+    if (!confirm("Delete this job? This cannot be undone.")) return;
     try {
       await deleteJob(id).unwrap();
     } catch (err: unknown) {
@@ -43,12 +39,12 @@ export default function MyJobsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-white sm:bg-gray-50">
         <DashboardHeader />
-        <div className="max-w-6xl mx-auto p-6">
-          <div className="h-8 bg-gray-200 rounded w-1/3 mb-6 animate-pulse"></div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            {[1,2,3,4,5,6].map((i) => <JobCardSkeleton key={i} />)}
+        <div className="max-w-6xl mx-auto p-3 sm:p-6">
+          <div className="h-6 bg-gray-200 rounded w-1/3 mb-4 animate-pulse"></div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            {[1,2,3,4].map((i) => <JobCardSkeleton key={i} />)}
           </div>
         </div>
       </div>
@@ -56,70 +52,74 @@ export default function MyJobsPage() {
   }
 
   if (isError) return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white sm:bg-gray-50">
       <DashboardHeader />
-      <div className="p-6 text-center text-red-500">Failed to load jobs. Please try again.</div>
+      <div className="p-6 text-center text-red-500 text-[13px]">Failed to load jobs.</div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white sm:bg-gray-50">
       <DashboardHeader />
-      <main className="max-w-6xl mb-16 mx-auto p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+      <main className="max-w-6xl mx-auto pb-24 sm:pb-6 p-3 sm:p-6">
+        {/* Header compact */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">My Posted Jobs</h1>
-            <p className="text-gray-500 mt-1">Manage all your job listings in one place</p>
+            <h1 className="text-[18px] sm:text-[24px] font-bold text-gray-900 leading-tight">My Posted Jobs</h1>
+            <p className="text-gray-500 text-[11px] sm:text-[13px] mt-1">{jobs.length} listings</p>
           </div>
-          <Link href="/dashboard/employer/post-job" className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium flex items-center gap-2 transition shadow-sm">
-            <Plus size={18} /> Post New Job
+          <Link href="/dashboard/employer/post-job" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl font-medium flex items-center gap-1.5 text-[12px] sm:text-[13px] shadow-sm">
+            <Plus size={14} /> Post New Job
           </Link>
         </div>
 
         {jobs.length === 0? (
-          <div className="text-center py-16 bg-white rounded-xl shadow-sm border">
-            <div className="mx-auto w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4">
-              <Briefcase size={32} />
+          <div className="text-center py-10 sm:py-16 bg-white rounded-2xl border border-gray-100">
+            <div className="mx-auto w-12 h-12 sm:w-16 sm:h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-3">
+              <Briefcase size={22} />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No jobs posted yet</h3>
-            <p className="text-gray-500 mb-6">Start hiring by posting your first job listing</p>
-            <Link href="/dashboard/employer/post-job" className="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-medium inline-flex items-center gap-2">
-              <Plus size={18} /> Post Your First Job
+            <h3 className="text-[14px] sm:text-[18px] font-semibold text-gray-900 mb-1">No jobs posted yet</h3>
+            <p className="text-gray-500 text-[12px] sm:text-[13px] mb-4">Start hiring by posting first job</p>
+            <Link href="/dashboard/employer/post-job" className="bg-blue-600 text-white px-4 py-2 rounded-xl font-medium inline-flex items-center gap-1.5 text-[12px]">
+              <Plus size={14} /> Post Your First Job
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-5">
             {jobs.map((job) => (
-              <div key={job._id} className="bg-white p-6 rounded-xl shadow-sm border hover:shadow-md transition">
-                <div className="flex flex-col gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <h3 className="text-xl font-semibold text-gray-900">{job.title}</h3>
-                      {job.type && <span className="px-2.5 py-0.5 bg-blue-50 text-blue-700 rounded-full text-xs font-medium border border-blue-100">{job.type}</span>}
+              <div key={job._id} className="bg-white p-3.5 sm:p-6 rounded-2xl border border-gray-200 sm:shadow-sm hover:shadow-md transition">
+                <div className="flex flex-col gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2 mb-1.5">
+                      <h3 className="text-[14px] sm:text-[17px] font-bold text-gray-900 leading-tight line-clamp-2 flex-1">{job.title}</h3>
+                      {job.type && <span className="shrink-0 px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-[10px] sm:text-[11px] font-medium border border-blue-100">{job.type}</span>}
                     </div>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-gray-600 text-sm mb-3">
-                      <span className="flex items-center gap-1.5"><Briefcase size={14} /> {job.company}</span>
-                      <span className="flex items-center gap-1.5"><MapPin size={14} /> {job.location}</span>
-                      <span className="flex items-center gap-1.5 text-green-700 font-medium">Rs. {Number(job.salary).toLocaleString("en-PK")}</span>
+
+                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-x-3 sm:gap-y-2 text-[11px] sm:text-[13px] mb-2">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-50 border text-gray-600"><Briefcase size={10} /> <span className="truncate max-w-22.5 sm:max-w-none">{job.company}</span></span>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-50 border text-gray-600"><MapPin size={10} /> {job.location}</span>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 border border-green-100 text-green-700 font-semibold">Rs. {Number(job.salary).toLocaleString("en-PK")}</span>
                     </div>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-                      <span className="flex items-center gap-1.5 text-gray-500"><Calendar size={14} /> Posted {new Date(job.createdAt).toLocaleDateString()}</span>
-                      <span className="flex items-center gap-1.5 px-2.5 py-0.5 bg-blue-100 text-blue-700 rounded-full font-medium"><Users size={14} /> {job.applicationCount?? 0} Applicants</span>
+
+                    <div className="flex flex-wrap items-center gap-2 text-[11px] sm:text-[12px]">
+                      <span className="flex items-center gap-1 text-gray-500"><Calendar size={11} /> {new Date(job.createdAt).toLocaleDateString()}</span>
+                      <span className="flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full font-semibold border border-blue-100"><Users size={11} /> {job.applicationCount?? 0}</span>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-4 gap-2 mt-2">
-                    <Link href={`/dashboard/employer/jobs/${job._id}`} className="bg-purple-50 hover:bg-purple-100 text-purple-700 px-1 md:px-3 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-0.5 md:gap-1.5 transition">
-                      <Eye size={14} /> View
+                  {/* Buttons - compact 2x2 on mobile */}
+                  <div className="grid grid-cols-4 sm:grid-cols-4 gap-1.5 sm:gap-2 mt-1">
+                    <Link href={`/dashboard/employer/jobs/${job._id}`} className="bg-purple-50 hover:bg-purple-100 text-purple-700 px-1 py-2 sm:px-3 sm:py-2 rounded-xl text-[11px] sm:text-[13px] font-semibold flex items-center justify-center gap-1 transition">
+                      <Eye size={12} /> <span className="hidden sm:inline">View</span><span className="sm:hidden">View</span>
                     </Link>
-                    <Link href={`/dashboard/employer/applicants?jobId=${job._id}`} className="bg-blue-50 hover:bg-blue-100 text-blue-700 px-0.2 md:px-3 py-2 rounded-lg text-sm font-medium text-center transition">
-                      Applicants
+                    <Link href={`/dashboard/employer/applicants?jobId=${job._id}`} className="bg-blue-50 hover:bg-blue-100 text-blue-700 px-1 py-2 sm:px-3 sm:py-2 rounded-xl text-[11px] sm:text-[13px] font-semibold flex items-center justify-center transition">
+                      Apps
                     </Link>
-                    <Link href={`/dashboard/employer/jobs/${job._id}/edit`} className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-0 md:px-3 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-0.5 md:gap-1.5 transition">
-                      <Edit size={14} /> Edit
+                    <Link href={`/dashboard/employer/jobs/${job._id}/edit`} className="bg-gray-50 hover:bg-gray-100 text-gray-700 border px-1 py-2 sm:px-3 sm:py-2 rounded-xl text-[11px] sm:text-[13px] font-semibold flex items-center justify-center gap-1 transition">
+                      <Edit size={12} /> Edit
                     </Link>
-                    <button onClick={() => handleDelete(job._id)} disabled={isDeleting} className="bg-red-50 hover:bg-red-100 text-red-600 px-1 md:px-3 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-0.5 md:gap-1.5 transition disabled:opacity-50">
-                      <Trash2 size={14} /> Delete
+                    <button onClick={() => handleDelete(job._id)} disabled={isDeleting} className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 px-1 py-2 sm:px-3 sm:py-2 rounded-xl text-[11px] sm:text-[13px] font-semibold flex items-center justify-center gap-1 transition disabled:opacity-50">
+                      <Trash2 size={12} /> Del
                     </button>
                   </div>
                 </div>
