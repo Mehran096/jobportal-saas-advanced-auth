@@ -102,9 +102,9 @@ function ApplicantsContent() {
                           <p className="flex items-center gap-1 text-gray-800 text-[12px] sm:text-[13px] truncate leading-tight mt-0.5"><User size={11} className="shrink-0 text-gray-400" /> <span className="truncate font-medium">{s.firstName} {s.lastName}</span> <span className="text-gray-400 text-[11px]">•</span> <span className="truncate text-gray-500 text-[11px]">{s.headline || "No headline"}</span></p>
 
                           <div className="flex flex-wrap gap-1.5 text-[10px] sm:text-[11px] text-gray-500 mt-1.5">
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-gray-50 border truncate max-w-[140px]"><Mail size={10} /> <span className="truncate">{s.email}</span></span>
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-gray-50 border truncate max-w-35"><Mail size={10} /> <span className="truncate">{s.email}</span></span>
                             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-gray-50 border"><Phone size={10} /> {s.phone || "No phone"}</span>
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-gray-50 border truncate max-w-[100px]"><MapPin size={10} /> <span className="truncate">{s.location || "No loc"}</span></span>
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-gray-50 border truncate max-w-25"><MapPin size={10} /> <span className="truncate">{s.location || "No loc"}</span></span>
                           </div>
 
                           <div className="flex gap-1 mt-2 flex-wrap">
