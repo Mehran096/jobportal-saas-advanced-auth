@@ -139,7 +139,7 @@ function JobDetailContent() {
 
             {/* Meta - small + scrollable on mobile */}
             <div className="mt-3 flex flex-wrap sm:flex-wrap gap-1.5 text-[11px] sm:text-[13px] text-gray-600">
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-50 border text-gray-700"><Building size={11} /> <span className="truncate max-w-[120px] sm:max-w-none">{companyProfile?.companyName || job.company}</span></span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-50 border text-gray-700"><Building size={11} /> <span className="truncate max-w-30 sm:max-w-none">{companyProfile?.companyName || job.company}</span></span>
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-50 border"><MapPin size={11} /> {companyProfile?.location || job.location}</span>
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-50 border border-green-100 text-green-700 font-semibold">Rs. {Number(job.salary).toLocaleString("en-PK")}</span>
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-50 border"><Calendar size={11} /> {new Date(job.createdAt).toLocaleDateString()}</span>
@@ -147,27 +147,27 @@ function JobDetailContent() {
             </div>
           </div>
 
-          <div className="h-[1px] bg-gray-100 mx-4 sm:mx-6"></div>
+          <div className="h-px bg-gray-100 mx-4 sm:mx-6"></div>
 
           <div className="p-4 sm:p-6">
             <h3 className="font-semibold text-[13px] sm:text-[15px] mb-2">Job Description</h3>
-            <p className="text-[13px] sm:text-[14px] text-gray-600 leading-[1.6] whitespace-pre-line break-words">{job.description}</p>
+            <p className="text-[13px] sm:text-[14px] text-gray-600 leading-[1.6] whitespace-pre-line wrap-break-words">{job.description}</p>
           </div>
 
-          <div className="h-[1px] bg-gray-100 mx-4 sm:mx-6"></div>
+          <div className="h-px bg-gray-100 mx-4 sm:mx-6"></div>
 
           <div className="p-4 sm:p-6">
             <h3 className="font-bold text-[11px] sm:text-[12px] tracking-wide text-gray-900 mb-3 flex items-center gap-1.5"><Building2 size={14} className="text-blue-600" /> ABOUT COMPANY</h3>
-            <div className="bg-gray-50 sm:bg-gradient-to-br sm:from-gray-50 sm:to-white rounded-xl sm:rounded-2xl p-3.5 sm:p-5 border border-gray-100">
+            <div className="bg-gray-50 sm:bg-linear-to-br sm:from-gray-50 sm:to-white rounded-xl sm:rounded-2xl p-3.5 sm:p-5 border border-gray-100">
               <div className="flex gap-3">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-white overflow-hidden relative flex-shrink-0 ring-1 ring-gray-200">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-white overflow-hidden relative shrink-0 ring-1 ring-gray-200">
                   {companyProfile?.companyLogo? <Image src={companyProfile.companyLogo} alt="logo" fill className="object-cover" unoptimized /> : <div className="flex items-center justify-center h-full text-gray-400"><Building2 size={18} /></div>}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-[13px] sm:text-[15px] text-gray-900 leading-tight truncate">{companyProfile?.companyName || job.company}</p>
                   <div className="flex flex-col gap-1 mt-2 text-[11px] sm:text-[13px] text-gray-600">
                     <span className="flex items-center gap-1.5"><MapPin size={12} className="text-gray-400 shrink-0" /> <span className="truncate">{companyProfile?.location || job.location}</span></span>
-                    <span className="flex items-center gap-1.5"><Users size={12} className="text-gray-400" /> {companyProfile?.companySize? `${companyProfile.companySize} employees` : "500+ employees"}</span>
+                    <span className="flex items-center gap-1.5"><Users size={12} className="text-gray-400" /> {companyProfile?.companySize? `${companyProfile.companySize} employees` : "++ employees"}</span>
                     {companyProfile?.companyWebsite && <a href={`https://${companyProfile.companyWebsite.replace(/^https?:\/\//,'')}`} target="_blank" className="flex items-center gap-1.5 text-blue-600 hover:underline truncate"><Globe size={12} /> {companyProfile.companyWebsite}</a>}
                   </div>
                 </div>
@@ -186,7 +186,7 @@ function JobDetailContent() {
       </div>
 
       {/* ✅ Sticky Apply - mobile only */}
-      <div className="sm:hidden fixed bottom-[64px] left-0 right-0 bg-white border-t border-gray-200 p-3 flex gap-2 z-20">
+      <div className="sm:hidden fixed bottom-16 left-0 right-0 bg-white border-t border-gray-200 p-3 flex gap-2 z-20">
         <button onClick={handleToggleSave} className={`shrink-0 px-4 py-2.5 rounded-xl border text-[13px] font-semibold ${isSaved? "bg-blue-50 border-blue-200 text-blue-600" : "bg-white border-gray-200 text-gray-700"}`}>{isSaved? "Saved" : "Save"}</button>
         <button onClick={handleApplyClick} disabled={alreadyApplied || isApplying} className={`flex-1 py-2.5 rounded-xl font-semibold text-[13px] flex items-center justify-center gap-2 ${alreadyApplied? "bg-gray-100 text-gray-500" : "bg-blue-600 text-white"}`}>
           {isApplying && <Loader2 size={14} className="animate-spin" />}{alreadyApplied? "✓ Applied" : "Apply Now"}

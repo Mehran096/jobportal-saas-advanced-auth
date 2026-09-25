@@ -69,7 +69,7 @@ export default function Pagination({
             <button
               key={p}
               onClick={() => handleChange(p)}
-              className={`min-w-[42px] h-[42px] rounded-lg font-medium border text-sm transition ${
+              className={`min-w-10.5 h-10.5 rounded-lg font-medium border text-sm transition ${
                 currentPage === p
                   ? "bg-blue-600 text-white border-blue-600 shadow-sm"
                   : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300"
