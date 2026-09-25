@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { signIn, getSession } from "next-auth/react";
 import { Mail, Lock, Loader2, Briefcase, AlertCircle } from "lucide-react";
 import Image from "next/image";
 
-export default function LoginPage() {
+export const dynamic = 'force-dynamic';
+
+function LoginContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -42,7 +44,6 @@ export default function LoginPage() {
         const lowerError = res.error.toLowerCase();
 
         if (lowerError.includes("banned")) {
-          // REDIRECT to banned page for appeal
           router.push(`/banned?email=${encodeURIComponent(email.toLowerCase().trim())}`);
           return;
         }
@@ -94,7 +95,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-to-br from-blue-600 to-indigo-700 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl mb-4 shadow-lg">
@@ -217,5 +218,17 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Loader2 className="animate-spin" size={24} />
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }
