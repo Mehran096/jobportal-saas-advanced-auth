@@ -51,8 +51,7 @@ function JobDetailContent() {
   const companyProfile = data?.companyProfile;
   const applicationCount = data?.applicationCount || 0;
   const appliedJobIds = Array.isArray(applications)
-  ? applications.map((a: { job?: { _id: string } | string }) => typeof a.job === 'object'? a.job?._id : a.job)
-    : [];
+ ? applications.map((a: { job?: { _id: string } | string }) => typeof a.job === 'object'? a.job?._id : a.job) : [];
   const alreadyApplied = appliedJobIds.includes(jobId);
   const isSaved = savedData?.savedJobs?.some((j) => j._id === jobId);
 
@@ -71,19 +70,12 @@ function JobDetailContent() {
 
   const handleApplyClick = () => {
     if (alreadyApplied) return;
-    if (!profile?.resumeUrl) {
-      setShowNoCvModal(true);
-    } else if (justEdited) {
-      directApply();
-    } else {
-      setShowConfirmModal(true);
-    }
+    if (!profile?.resumeUrl) setShowNoCvModal(true);
+    else if (justEdited) directApply();
+    else setShowConfirmModal(true);
   };
 
-  const confirmApply = async () => {
-    setShowConfirmModal(false);
-    await directApply();
-  };
+  const confirmApply = async () => { setShowConfirmModal(false); await directApply(); };
 
   const handleToggleSave = async () => {
     try {
@@ -92,201 +84,161 @@ function JobDetailContent() {
     } catch { toast.error("Failed"); }
   };
 
-    const handleReportSubmit = async () => {
+  const handleReportSubmit = async () => {
     try {
       const rawPostedBy = job?.postedBy as unknown;
-
       let postedById: string | undefined;
-      if (typeof rawPostedBy === "string") {
-        postedById = rawPostedBy;
-      } else if (
-        rawPostedBy &&
-        typeof rawPostedBy === "object" &&
-        "_id" in rawPostedBy
-      ) {
-        postedById = (rawPostedBy as { _id: string })._id;
-      }
-
-      if (!postedById) {
-        toast.error("Cannot report, owner not found");
-        return;
-      }
-
-      await reportUser({
-        reportedUser: postedById,
-        reason: reportReason,
-        details: reportDetails,
-        jobId: jobId
-      }).unwrap();
+      if (typeof rawPostedBy === "string") postedById = rawPostedBy;
+      else if (rawPostedBy && typeof rawPostedBy === "object" && "_id" in rawPostedBy) postedById = (rawPostedBy as { _id: string })._id;
+      if (!postedById) { toast.error("Cannot report, owner not found"); return; }
+      await reportUser({ reportedUser: postedById, reason: reportReason, details: reportDetails, jobId: jobId }).unwrap();
       toast.success("Report sent to admin");
-      setShowReportModal(false);
-      setReportDetails("");
-    } catch (err) {
-      const apiErr = err as ApiError;
-      toast.error(apiErr?.data?.message || "Failed to report");
-    }
+      setShowReportModal(false); setReportDetails("");
+    } catch (err) { const apiErr = err as ApiError; toast.error(apiErr?.data?.message || "Failed to report"); }
   };
 
   if (isLoading || appsLoading) {
-    return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={32} /></div>
+    return <div className="min-h-screen bg-white sm:bg-gray-50 flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={28} /></div>
   }
 
   if (isError ||!job) {
     return (
       <div className="max-w-4xl mx-auto p-6 text-center">
-        <h2 className="text-2xl font-bold mb-4">Job not found</h2>
-        <button onClick={() => router.push("/dashboard/jobs")} className="text-blue-600 hover:underline">Go Back</button>
+        <h2 className="text-lg font-bold mb-3">Job not found</h2>
+        <button onClick={() => router.push("/dashboard/jobs")} className="text-blue-600 text-sm">Go Back</button>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white sm:bg-gray-50">
       <DashboardHeader />
-      <div className="max-w-5xl mb-16 mx-auto p-4 sm:p-6 pb-28 lg:pb-6">
-        <div className="flex items-center gap-4 mb-6">
-          <button onClick={() => router.back()} className="p-2 hover:bg-gray-200 rounded-lg transition"><ArrowLeft size={20} /></button>
-          <h1 className="text-2xl font-bold text-gray-900">Job Details</h1>
-          {justEdited && <span className="text-xs bg-green-100 text-green-700 px-2.5 py-1 rounded-full font-medium">CV updated ✓ Ready to apply</span>}
+      <div className="max-w-3xl mx-auto px-0 sm:px-6 pb-28 sm:pb-6">
+        {/* Top bar - compact */}
+        <div className="flex items-center justify-between px-3 sm:px-0 pt-3 sm:pt-6 mb-3">
+          <button onClick={() => router.back()} className="flex items-center gap-1.5 p-1.5 sm:p-2 hover:bg-gray-100 sm:hover:bg-gray-200 rounded-lg transition text-[13px] sm:text-sm text-gray-700"><ArrowLeft size={16} /> <span className="hidden sm:inline">Back</span></button>
+          {justEdited && <span className="text-[11px] bg-green-100 text-green-700 px-2.5 py-1 rounded-full font-medium shrink-0">CV updated ✓</span>}
         </div>
 
-        <div className="bg-white rounded-[20px] shadow-sm border p-6 mb-6">
-          <div className="flex-1">
-            <div className="flex items-start justify-between gap-4">
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 flex-1">{job.title}</h2>
-              <div className="flex items-center gap-2">
-                <button onClick={() => setShowReportModal(true)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl font-medium border bg-white border-gray-300 text-gray-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition">
-                  <Flag size={16} /> Report
+        {/* ✅ CARD - NO border/shadow on mobile, border on desktop */}
+        <div className="bg-white sm:rounded-[20px] sm:shadow-sm sm:border border-gray-100 overflow-hidden">
+          <div className="p-4 sm:p-6">
+            {/* ✅ FIXED TITLE + BUTTONS - no break */}
+            <div className="flex items-start gap-3">
+              <h2 className="flex-1 min-w-0 text-[18px] sm:text-[22px] font-bold text-gray-900 leading-tight line-clamp-3">{job.title}</h2>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button onClick={() => setShowReportModal(true)} className="shrink-0 flex items-center justify-center w-8 h-8 sm:w-auto sm:h-auto sm:px-3 sm:py-1.5 rounded-full sm:rounded-xl border bg-white border-gray-200 text-gray-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition">
+                  <Flag size={14} /><span className="hidden sm:inline ml-1.5 text-[13px]">Report</span>
                 </button>
-                <button onClick={handleToggleSave} disabled={isSaving || isUnsaving}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium border transition ${isSaved? "bg-purple-50 border-purple-200 text-purple-700" : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"}`}>
-                  {isSaved? <BookmarkCheck size={18} /> : <Bookmark size={18} />} {isSaved? "Saved" : "Save"}
+                <button onClick={handleToggleSave} disabled={isSaving || isUnsaving} className={`shrink-0 flex items-center justify-center gap-1 w-8 h-8 sm:w-auto sm:h-auto sm:px-3.5 sm:py-1.5 rounded-full sm:rounded-xl border font-medium transition ${isSaved? "bg-blue-50 border-blue-200 text-blue-600" : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"}`}>
+                  {isSaving || isUnsaving? <Loader2 size={14} className="animate-spin" /> : isSaved? <BookmarkCheck size={15} /> : <Bookmark size={15} />}
+                  <span className="hidden sm:inline text-[13px]">{isSaved? "Saved" : "Save"}</span>
                 </button>
               </div>
             </div>
-            <div className="flex flex-wrap gap-x-5 gap-y-2 text-gray-600 mb-4 text-sm">
-              <div className="flex items-center gap-2"><Building size={16} className="text-gray-400" /> {companyProfile?.companyName || job.company}</div>
-              <div className="flex items-center gap-2"><MapPin size={16} className="text-gray-400" /> {companyProfile?.location || job.location}</div>
-              <div className="flex items-center gap-2 text-green-700 font-semibold">Rs. {Number(job.salary).toLocaleString("en-PK")} / month</div>
-              <div className="flex items-center gap-2"><Calendar size={16} className="text-gray-400" /> Posted {new Date(job.createdAt).toLocaleDateString()}</div>
-              <div className="flex items-center gap-2"><Users size={16} className="text-gray-400" /> {applicationCount} Applicants</div>
+
+            {/* Meta - small + scrollable on mobile */}
+            <div className="mt-3 flex flex-wrap sm:flex-wrap gap-1.5 text-[11px] sm:text-[13px] text-gray-600">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-50 border text-gray-700"><Building size={11} /> <span className="truncate max-w-[120px] sm:max-w-none">{companyProfile?.companyName || job.company}</span></span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-50 border"><MapPin size={11} /> {companyProfile?.location || job.location}</span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-50 border border-green-100 text-green-700 font-semibold">Rs. {Number(job.salary).toLocaleString("en-PK")}</span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-50 border"><Calendar size={11} /> {new Date(job.createdAt).toLocaleDateString()}</span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-50 border"><Users size={11} /> {applicationCount}</span>
             </div>
           </div>
 
-          <div className="border-t pt-5 mt-5">
-            <h3 className="font-semibold text-lg mb-3 text-gray-900">Job Description</h3>
-            <p className="text-gray-700 leading-relaxed wrap-break-word overflow-hidden whitespace-pre-line">{job.description}</p>
+          <div className="h-[1px] bg-gray-100 mx-4 sm:mx-6"></div>
+
+          <div className="p-4 sm:p-6">
+            <h3 className="font-semibold text-[13px] sm:text-[15px] mb-2">Job Description</h3>
+            <p className="text-[13px] sm:text-[14px] text-gray-600 leading-[1.6] whitespace-pre-line break-words">{job.description}</p>
           </div>
 
-          <div className="border-t pt-6 mt-6">
-            <h3 className="font-bold text-[13px] tracking-wide text-gray-900 mb-3 flex items-center gap-2"><Building2 size={16} className="text-blue-600" /> ABOUT COMPANY</h3>
-            <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-4 sm:p-5 border">
-              <div className="flex flex-col sm:flex-row gap-4 sm:items-start">
-                <div className="w-16 h-16 sm:w-14 sm:h-14 rounded-xl bg-white overflow-hidden relative flex-shrink-0 ring-1 ring-gray-200 self-start">
-                  {companyProfile?.companyLogo? (
-                    <Image src={companyProfile.companyLogo} alt={companyProfile.companyName || "logo"} fill className="object-cover" unoptimized priority />
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-gray-400"><Building2 size={24} /></div>
-                  )}
+          <div className="h-[1px] bg-gray-100 mx-4 sm:mx-6"></div>
+
+          <div className="p-4 sm:p-6">
+            <h3 className="font-bold text-[11px] sm:text-[12px] tracking-wide text-gray-900 mb-3 flex items-center gap-1.5"><Building2 size={14} className="text-blue-600" /> ABOUT COMPANY</h3>
+            <div className="bg-gray-50 sm:bg-gradient-to-br sm:from-gray-50 sm:to-white rounded-xl sm:rounded-2xl p-3.5 sm:p-5 border border-gray-100">
+              <div className="flex gap-3">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-white overflow-hidden relative flex-shrink-0 ring-1 ring-gray-200">
+                  {companyProfile?.companyLogo? <Image src={companyProfile.companyLogo} alt="logo" fill className="object-cover" unoptimized /> : <div className="flex items-center justify-center h-full text-gray-400"><Building2 size={18} /></div>}
                 </div>
-                <div className="flex-1 min-w-0 w-full">
-                  <p className="font-bold text-[16px] sm:text-[15px] text-gray-900 leading-tight">{companyProfile?.companyName || job.company || "ITBS - IT Business Solutions"}</p>
-                  <div className="flex flex-col gap-1.5 mt-3 text-[13px] text-gray-600">
-                    <span className="flex items-center gap-2"><MapPin size={14} className="text-gray-400"/> {companyProfile?.location || job.location || "Lahore"}</span>
-                    <span className="flex items-center gap-2"><Users size={14} className="text-gray-400"/> {companyProfile?.companySize? `${companyProfile.companySize} employees` : "500+ employees"}</span>
-                    {companyProfile?.companyWebsite && (
-                      <a href={`https://${companyProfile.companyWebsite.replace(/^https?:\/\//,'')}`} target="_blank" className="flex items-center gap-2 text-blue-600 hover:underline break-all"><Globe size={14}/> {companyProfile.companyWebsite}</a>
-                    )}
-                    {companyProfile?.phone && (
-                      <span className="flex items-center gap-2">📞 {companyProfile.phone}</span>
-                    )}
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-[13px] sm:text-[15px] text-gray-900 leading-tight truncate">{companyProfile?.companyName || job.company}</p>
+                  <div className="flex flex-col gap-1 mt-2 text-[11px] sm:text-[13px] text-gray-600">
+                    <span className="flex items-center gap-1.5"><MapPin size={12} className="text-gray-400 shrink-0" /> <span className="truncate">{companyProfile?.location || job.location}</span></span>
+                    <span className="flex items-center gap-1.5"><Users size={12} className="text-gray-400" /> {companyProfile?.companySize? `${companyProfile.companySize} employees` : "500+ employees"}</span>
+                    {companyProfile?.companyWebsite && <a href={`https://${companyProfile.companyWebsite.replace(/^https?:\/\//,'')}`} target="_blank" className="flex items-center gap-1.5 text-blue-600 hover:underline truncate"><Globe size={12} /> {companyProfile.companyWebsite}</a>}
                   </div>
-                  <p className="text-[13px] text-gray-600 mt-4 leading-[1.7] whitespace-pre-line">
-                    {companyProfile?.companyDescription || "This employer has not added a company description yet."}
-                  </p>
                 </div>
               </div>
+              <p className="text-[12px] sm:text-[13px] text-gray-600 mt-3 leading-[1.6] whitespace-pre-line">{companyProfile?.companyDescription || "No company description."}</p>
             </div>
           </div>
 
-          <div className="border-t pt-5 mt-5">
-            <button onClick={handleApplyClick} disabled={alreadyApplied || isApplying}
-              className={`w-full py-3 rounded-xl font-semibold transition flex items-center justify-center gap-2 ${alreadyApplied? "bg-gray-200 text-gray-500 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 text-white shadow-sm"}`}>
-              {isApplying && <Loader2 size={18} className="animate-spin" />}
-              {alreadyApplied? "✓ Applied" : isApplying? "Applying..." : justEdited? "Apply Now (Updated CV)" : "Apply Now"}
+          {/* Desktop Apply */}
+          <div className="hidden sm:block p-4 sm:p-6 pt-0">
+            <button onClick={handleApplyClick} disabled={alreadyApplied || isApplying} className={`w-full py-2.5 rounded-xl font-semibold text-[14px] flex items-center justify-center gap-2 ${alreadyApplied? "bg-gray-100 text-gray-500" : "bg-blue-600 hover:bg-blue-700 text-white"}`}>
+              {isApplying && <Loader2 size={16} className="animate-spin" />}{alreadyApplied? "✓ Applied" : justEdited? "Apply Now (Updated CV)" : "Apply Now"}
             </button>
-            {alreadyApplied && <p className="text-center text-sm text-green-600 mt-2">Your CV and profile were sent to employer</p>}
           </div>
         </div>
       </div>
 
-      {/* REPORT MODAL */}
-      {showReportModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2"><Flag size={18} className="text-red-500" /> Report this Job</h3>
-            <p className="text-sm text-gray-600 mt-1">Help us keep jobs safe. Why are you reporting?</p>
+      {/* ✅ Sticky Apply - mobile only */}
+      <div className="sm:hidden fixed bottom-[64px] left-0 right-0 bg-white border-t border-gray-200 p-3 flex gap-2 z-20">
+        <button onClick={handleToggleSave} className={`shrink-0 px-4 py-2.5 rounded-xl border text-[13px] font-semibold ${isSaved? "bg-blue-50 border-blue-200 text-blue-600" : "bg-white border-gray-200 text-gray-700"}`}>{isSaved? "Saved" : "Save"}</button>
+        <button onClick={handleApplyClick} disabled={alreadyApplied || isApplying} className={`flex-1 py-2.5 rounded-xl font-semibold text-[13px] flex items-center justify-center gap-2 ${alreadyApplied? "bg-gray-100 text-gray-500" : "bg-blue-600 text-white"}`}>
+          {isApplying && <Loader2 size={14} className="animate-spin" />}{alreadyApplied? "✓ Applied" : "Apply Now"}
+        </button>
+      </div>
 
-            <div className="mt-4 space-y-2">
-              {[
-                { value: "fake_job", label: "Fake Job / Fake Salary" },
-                { value: "spam", label: "Spam / Duplicate" },
-                { value: "scam", label: "Scam / Asking for money" },
-                { value: "abuse", label: "Abuse / Inappropriate" },
-                { value: "other", label: "Other" },
-              ].map((r) => (
-                <label key={r.value} className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition ${reportReason === r.value? "border-red-500 bg-red-50" : "border-gray-200 hover:bg-gray-50"}`}>
-                  <input type="radio" name="reason" value={r.value} checked={reportReason === r.value} onChange={() => setReportReason(r.value as ReportReason)} className="accent-red-600" />
-                  <span className="text-sm font-medium text-gray-800">{r.label}</span>
+      {/* MODALS - same but compact text */}
+      {showReportModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-5">
+            <h3 className="text-[15px] font-bold flex items-center gap-2"><Flag size={16} className="text-red-500" /> Report this Job</h3>
+            <div className="mt-3 space-y-2">
+              {[{ value: "fake_job", label: "Fake Job / Fake Salary" },{ value: "spam", label: "Spam" },{ value: "scam", label: "Scam / Asking money" },{ value: "abuse", label: "Abuse" },{ value: "other", label: "Other" }].map((r) => (
+                <label key={r.value} className={`flex items-center gap-2 p-2.5 border rounded-xl cursor-pointer text-[13px] ${reportReason === r.value? "border-red-500 bg-red-50" : "border-gray-200"}`}>
+                  <input type="radio" checked={reportReason === r.value} onChange={() => setReportReason(r.value as ReportReason)} className="accent-red-600" />{r.label}
                 </label>
               ))}
             </div>
-
-            <textarea value={reportDetails} onChange={(e) => setReportDetails(e.target.value)} placeholder="Add more details (optional) max 500 chars"
-              maxLength={500} rows={3} className="w-full mt-4 p-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none resize-none" />
-
-            <div className="flex justify-end gap-3 mt-6">
-              <button onClick={() => setShowReportModal(false)} className="px-4 py-2 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm font-medium">Cancel</button>
-              <button onClick={handleReportSubmit} disabled={isReporting} className="px-5 py-2 rounded-xl bg-red-600 text-white hover:bg-red-700 text-sm font-medium flex items-center gap-2 disabled:opacity-60">
-                {isReporting && <Loader2 size={16} className="animate-spin" />} Submit Report
-              </button>
+            <textarea value={reportDetails} onChange={(e) => setReportDetails(e.target.value)} placeholder="Details (optional)" maxLength={500} rows={3} className="w-full mt-3 p-2.5 border rounded-xl text-[13px] outline-none focus:ring-2 focus:ring-red-500" />
+            <div className="flex justify-end gap-2 mt-4">
+              <button onClick={() => setShowReportModal(false)} className="px-4 py-2 rounded-xl border text-[13px]">Cancel</button>
+              <button onClick={handleReportSubmit} disabled={isReporting} className="px-4 py-2 rounded-xl bg-red-600 text-white text-[13px] flex items-center gap-1">{isReporting && <Loader2 size={14} className="animate-spin" />} Submit</button>
             </div>
           </div>
         </div>
       )}
-
       {showNoCvModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6">
-            <h3 className="text-lg font-semibold text-gray-900">CV Required</h3>
-            <p className="text-gray-600 mt-2 text-sm">Please upload your CV in Profile first to apply for jobs.</p>
-            <div className="flex justify-end gap-3 mt-6">
-              <button onClick={() => setShowNoCvModal(false)} className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm font-medium">Cancel</button>
-              <button onClick={() => { setShowNoCvModal(false); router.push(`/dashboard/profile?redirect=/dashboard/jobs/${jobId}`); }} className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-sm font-medium">Go to Profile</button>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3">
+          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-5">
+            <h3 className="text-[15px] font-semibold">CV Required</h3>
+            <p className="text-[13px] text-gray-600 mt-1">Upload CV in Profile first.</p>
+            <div className="flex justify-end gap-2 mt-4">
+              <button onClick={() => setShowNoCvModal(false)} className="px-3 py-2 rounded-lg border text-[13px]">Cancel</button>
+              <button onClick={() => { setShowNoCvModal(false); router.push(`/dashboard/profile?redirect=/dashboard/jobs/${jobId}`); }} className="px-3 py-2 rounded-lg bg-blue-600 text-white text-[13px]">Go to Profile</button>
             </div>
           </div>
         </div>
       )}
-
       {showConfirmModal &&!justEdited && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-gray-900">Ready to Apply?</h3>
-            <p className="text-gray-600 mt-2 text-sm">Your CV is ready for this job. Review before sending.</p>
-            <div className="mt-4 bg-gray-50 border rounded-lg p-3 flex items-center gap-3">
-              <div className="p-2 bg-blue-100 text-blue-600 rounded-lg"><FileText size={20} /></div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{profile?.resumeOriginalName || profile?.resumeName || "My_CV.pdf"}</p>
-                <a href={profile?.resumeUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline">View CV</a>
-              </div>
-              <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">Ready</span>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-5">
+            <h3 className="text-[15px] font-semibold">Ready to Apply?</h3>
+            <div className="mt-3 bg-gray-50 border rounded-lg p-2.5 flex items-center gap-2">
+              <div className="p-1.5 bg-blue-100 text-blue-600 rounded-lg"><FileText size={16} /></div>
+              <div className="flex-1 min-w-0"><p className="text-[13px] font-medium truncate">{profile?.resumeOriginalName || profile?.resumeName || "My_CV.pdf"}</p><a href={profile?.resumeUrl} target="_blank" className="text-[11px] text-blue-600 hover:underline">View CV</a></div>
+              <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Ready</span>
             </div>
-            <div className="flex justify-between gap-3 mt-6">
-              <button onClick={() => setShowConfirmModal(false)} className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm font-medium">Cancel</button>
+            <div className="flex justify-between gap-2 mt-4">
+              <button onClick={() => setShowConfirmModal(false)} className="px-3 py-2 rounded-lg border text-[13px]">Cancel</button>
               <div className="flex gap-2">
-                <button onClick={() => { setShowConfirmModal(false); router.push(`/dashboard/profile?redirect=/dashboard/jobs/${jobId}`); }} className="px-4 py-2 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 text-sm font-medium">Edit CV</button>
-                <button onClick={confirmApply} className="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-sm font-medium">Confirm & Apply</button>
+                <button onClick={() => { setShowConfirmModal(false); router.push(`/dashboard/profile?redirect=/dashboard/jobs/${jobId}`); }} className="px-3 py-2 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 text-[13px]">Edit CV</button>
+                <button onClick={confirmApply} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-[13px]">Confirm & Apply</button>
               </div>
             </div>
           </div>
@@ -298,9 +250,5 @@ function JobDetailContent() {
 }
 
 export default function JobDetailPage() {
-  return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={32} /></div>}>
-      <JobDetailContent />
-    </Suspense>
-  );
+  return <Suspense fallback={<div className="min-h-screen bg-white flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={28} /></div>}><JobDetailContent /></Suspense>
 }
