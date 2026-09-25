@@ -10,41 +10,27 @@ import type { LucideIcon } from "lucide-react";
 import DashboardMobileNav from "@/app/components/DashboardMobileNav";
 
 type StatusKey = "accepted" | "rejected" | "shortlisted" | "pending" | "reviewed";
-
-type StatusStyle = {
-  bg: string;
-  border: string;
-  text: string;
-  Icon: LucideIcon;
-  label: string;
-  desc: string;
-};
+type StatusStyle = { bg: string; border: string; text: string; Icon: LucideIcon; label: string; desc: string };
 
 const STATUS_MAP: Record<StatusKey, StatusStyle> = {
-  accepted: { bg: "bg-green-50", border: "border-green-200", text: "text-green-700", Icon: CheckCircle2, label: "Accepted", desc: "Congratulations! Employer accepted your application" },
-  shortlisted: { bg: "bg-purple-50", border: "border-purple-200", text: "text-purple-700", Icon: Star, label: "Shortlisted", desc: "You are shortlisted! Employer will contact you soon" },
-  rejected: { bg: "bg-red-50", border: "border-red-200", text: "text-red-700", Icon: XCircle, label: "Rejected", desc: "This application was not selected" },
-  pending: { bg: "bg-yellow-50", border: "border-yellow-200", text: "text-yellow-700", Icon: Clock, label: "Pending", desc: "Under review by employer" },
-  reviewed: { bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700", Icon: Clock, label: "Reviewed", desc: "Employer viewed your application" },
+  accepted: { bg: "bg-green-50", border: "border-green-200", text: "text-green-700", Icon: CheckCircle2, label: "Accepted", desc: "Congrats! Employer accepted" },
+  shortlisted: { bg: "bg-purple-50", border: "border-purple-200", text: "text-purple-700", Icon: Star, label: "Shortlisted", desc: "You are shortlisted!" },
+  rejected: { bg: "bg-red-50", border: "border-red-200", text: "text-red-700", Icon: XCircle, label: "Rejected", desc: "Not selected" },
+  pending: { bg: "bg-yellow-50", border: "border-yellow-200", text: "text-yellow-700", Icon: Clock, label: "Pending", desc: "Under review" },
+  reviewed: { bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700", Icon: Clock, label: "Reviewed", desc: "Viewed by employer" },
 };
 
-interface Snapshot {
-  firstName?: string; lastName?: string; headline?: string; bio?: string; email?: string; phone?: string; location?: string; profileImage?: string; skills?: string[]; resumeUrl?: string; resumeName?: string;
-}
-interface Applicant {
-  firstName?: string; lastName?: string; title?: string; headline?: string; bio?: string; email?: string; phone?: string; location?: string; profilePicture?: string; avatar?: string; image?: string; skills?: string[];
-}
-interface CompanyProfile {
-  companyName: string; companyLogo?: string; companyWebsite?: string; companySize?: string; companyDescription?: string; location?: string; phone?: string;
-}
+interface Snapshot { firstName?: string; lastName?: string; headline?: string; bio?: string; email?: string; phone?: string; location?: string; profileImage?: string; skills?: string[]; resumeUrl?: string; resumeName?: string; }
+interface Applicant { firstName?: string; lastName?: string; title?: string; headline?: string; bio?: string; email?: string; phone?: string; location?: string; profilePicture?: string; avatar?: string; image?: string; skills?: string[]; }
+interface CompanyProfile { companyName: string; companyLogo?: string; companyWebsite?: string; companySize?: string; companyDescription?: string; location?: string; }
 
 export default function MyApplicationDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { data, isLoading } = useGetApplicationByIdQuery(id as string);
 
-  if (isLoading) return <div className="p-10 text-center">Loading...</div>;
-  if (!data?.application) return <div className="p-10 text-center">Application not found</div>;
+  if (isLoading) return <div className="min-h-screen bg-white sm:bg-gray-50"><DashboardHeader /><div className="p-6 text-center text-[13px]">Loading...</div></div>;
+  if (!data?.application) return <div className="min-h-screen bg-white sm:bg-gray-50"><DashboardHeader /><div className="p-6 text-center text-[13px]">Application not found</div></div>;
 
   const app = data.application as { _id: string; status: StatusKey; createdAt: string; snapshot: Snapshot; applicant: Applicant; job?: { title?: string; company?: string; location?: string } };
   const s = app.snapshot || {};
@@ -70,125 +56,124 @@ export default function MyApplicationDetailPage() {
   const fullName = `${profile.firstName} ${profile.lastName}`.trim() || "User";
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white sm:bg-gray-50">
       <DashboardHeader />
-      <main className="max-w-7xl mb-16 mx-auto p-3 sm:p-6 pb-28 lg:pb-6">
-        <button onClick={() => router.push("/dashboard/applications")} className="flex items-center gap-2 mb-4 text-sm px-3 py-2 rounded-xl border bg-white hover:bg-gray-50">
-          <ArrowLeft size={16} /> Back to Applications
-        </button>
+      <main className="max-w-6xl mx-auto px-0 sm:px-6 pb-24 sm:pb-6">
+        {/* Back */}
+        <div className="px-3 sm:px-0 pt-3 sm:pt-6 mb-3">
+          <button onClick={() => router.push("/dashboard/applications")} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border bg-white text-[12px] text-gray-700">
+            <ArrowLeft size={14} /> Back to Applications
+          </button>
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-5 space-y-4 h-fit">
-            {/* STATUS */}
-            <div className={`p-4 rounded-xl border flex gap-3 ${st.bg} ${st.border}`}>
-              <st.Icon className={`w-5 h-5 ${st.text}`} />
-              <div>
-                <p className={`font-bold ${st.text}`}>{st.label}</p>
-                <p className="text-xs text-gray-600">{st.desc}</p>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-5 px-3 sm:px-0">
+          {/* LEFT */}
+          <div className="lg:col-span-5 space-y-3 h-fit">
+            {/* Status compact */}
+            <div className={`rounded-xl border p-2.5 sm:p-3 flex gap-2.5 ${st.bg} ${st.border}`}>
+              <div className={`w-7 h-7 rounded-full bg-white border flex items-center justify-center shrink-0 ${st.text}`}><st.Icon size={14} /></div>
+              <div className="min-w-0">
+                <p className={`text-[13px] font-semibold ${st.text}`}>{st.label}</p>
+                <p className="text-[11px] text-gray-600 leading-tight">{st.desc}</p>
               </div>
             </div>
 
-            {/* JOB + COMPANY CARD - NEW */}
-            <div className="bg-white rounded-xl border p-5">
-              <h4 className="font-bold text-[13px] tracking-wide mb-3 flex items-center gap-2"><Briefcase size={14} className="text-blue-600"/> APPLIED JOB</h4>
-              <p className="font-bold text-[15px]">{job?.title || app.job?.title || "Job Title"}</p>
-              <div className="flex flex-wrap gap-x-3 gap-y-1 text-[12px] text-gray-500 mt-2">
-                <span className="flex items-center gap-1"><Building size={12}/>{companyProfile?.companyName || job?.company || app.job?.company || "Company"}</span>
-                <span className="flex items-center gap-1"><MapPin size={12}/>{companyProfile?.location || job?.location || app.job?.location || "Location"}</span>
+            {/* Job + Company */}
+            <div className="bg-white sm:border sm:rounded-2xl sm:shadow-sm border-y sm:border-gray-100 p-3.5 sm:p-5">
+              <h4 className="font-bold text-[10px] sm:text-[11px] tracking-wide text-gray-500 flex items-center gap-1 mb-2"><Briefcase size={12} className="text-blue-600" /> APPLIED JOB</h4>
+              <p className="font-bold text-[14px] sm:text-[15px] leading-tight truncate">{job?.title || app.job?.title || "Job Title"}</p>
+              <div className="flex flex-wrap gap-1.5 mt-2 text-[11px] text-gray-500">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-50 border"><Building size={10} />{companyProfile?.companyName || job?.company || app.job?.company || "Company"}</span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-50 border"><MapPin size={10} />{companyProfile?.location || job?.location || "Lahore"}</span>
               </div>
 
-              {/* COMPANY PROFILE */}
-              <div className="mt-4 bg-gray-50 rounded-xl p-3 border">
-                <div className="flex gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-white relative overflow-hidden ring-1 ring-gray-200 flex-shrink-0">
-                    {companyProfile?.companyLogo? (
-                      <Image src={companyProfile.companyLogo} alt="logo" fill className="object-cover" unoptimized />
-                    ) : (
-                      <div className="flex items-center justify-center h-full text-gray-400"><Building2 size={20}/></div>
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-semibold text-sm">{companyProfile?.companyName || job?.company || "Company not set"}</p>
-                    <p className="text-[11px] text-gray-500 mt-0.5 flex items-center gap-1"><Globe size={11}/>{companyProfile?.companyWebsite || "Website not set"} • {companyProfile?.companySize || "Size N/A"}</p>
-                    <p className="text-[11px] text-gray-600 mt-2 line-clamp-2">{companyProfile?.companyDescription || "No company description."}</p>
-                  </div>
+              <div className="mt-3 bg-gray-50 rounded-xl p-3 border border-gray-100 flex gap-2.5">
+                <div className="w-10 h-10 rounded-lg bg-white relative overflow-hidden ring-1 ring-gray-200 shrink-0">
+                  {companyProfile?.companyLogo? <Image src={companyProfile.companyLogo} alt="logo" fill className="object-cover" unoptimized /> : <div className="flex items-center justify-center h-full text-gray-400"><Building2 size={16} /></div>}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-[12px] truncate">{companyProfile?.companyName || "Company"}</p>
+                  <p className="text-[10px] text-gray-500 flex items-center gap-1 truncate"><Globe size={10} />{companyProfile?.companyWebsite || "No website"} • {companyProfile?.companySize || "Size N/A"}</p>
+                  <p className="text-[11px] text-gray-600 mt-1 line-clamp-2 leading-snug">{companyProfile?.companyDescription || "No description."}</p>
                 </div>
               </div>
             </div>
 
-            {/* Profile */}
-            <div className="bg-white rounded-xl border p-6">
-              <div className="flex gap-4">
-                <Image src={profile.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}`} width={64} height={64} unoptimized alt={fullName} className="w-16 h-16 rounded-full object-cover border" />
+            {/* Profile compact */}
+            <div className="bg-white sm:border sm:rounded-2xl sm:shadow-sm border-y sm:border-gray-100 p-3.5 sm:p-5">
+              <div className="flex gap-2.5">
+                <Image src={profile.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}`} width={40} height={40} unoptimized alt={fullName} className="w-10 h-10 rounded-full object-cover border shrink-0" />
                 <div className="min-w-0">
-                  <h1 className="text-xl font-bold wrap-break-word">{fullName}</h1>
-                  <p className="text-blue-600 text-sm font-medium wrap-break-word">{profile.headline}</p>
-                  <p className="text-xs text-gray-500 mt-1 flex items-center gap-1"><Building2 size={12}/> Applied for: <b>{job?.title || app.job?.title}</b></p>
+                  <h1 className="text-[14px] font-bold leading-tight truncate">{fullName}</h1>
+                  <p className="text-blue-600 text-[11px] font-medium leading-tight line-clamp-2">{profile.headline}</p>
+                  <p className="text-[10px] text-gray-500 mt-1 flex items-center gap-1"><Building2 size={10} /> Applied: <b className="truncate">{job?.title || app.job?.title}</b></p>
                 </div>
               </div>
 
-              {profile.bio && <p className="text-sm text-gray-600 mt-4 leading-relaxed whitespace-pre-wrap wrap-break-word">{profile.bio}</p>}
+              {profile.bio && <p className="text-[12px] text-gray-600 mt-3 leading-normal whitespace-pre-wrap wrap-break-words">{profile.bio}</p>}
 
-              <div className="mt-5 space-y-2 text-sm text-gray-700">
-                <p className="flex gap-2 items-center"><Mail size={16} className="shrink-0" /> <span className="wrap-break-word">{profile.email}</span></p>
-                <p className="flex gap-2 items-center"><Phone size={16} className="shrink-0" /> {profile.phone || "No phone"}</p>
-                <p className="flex gap-2 items-center"><MapPin size={16} className="shrink-0" /> <span className="wrap-break-word">{profile.location || "No location"}</span></p>
-                <p className="flex gap-2 items-center text-xs text-gray-500"><Calendar size={14}/> Applied on {new Date(app.createdAt).toDateString()}</p>
+              <div className="mt-3 space-y-1.5 text-[11px] text-gray-700">
+                <p className="flex gap-1.5 items-center truncate"><Mail size={12} className="shrink-0 text-gray-400" /> <span className="truncate">{profile.email}</span></p>
+                <p className="flex gap-1.5 items-center"><Phone size={12} className="shrink-0 text-gray-400" /> {profile.phone || "No phone"}</p>
+                <p className="flex gap-1.5 items-center truncate"><MapPin size={12} className="shrink-0 text-gray-400" /> <span className="truncate">{profile.location || "No location"}</span></p>
+                <p className="flex gap-1.5 items-center text-[10px] text-gray-500"><Calendar size={11} /> {new Date(app.createdAt).toLocaleDateString()}</p>
               </div>
 
-              <div className="mt-5">
-                <h4 className="font-semibold flex gap-2 mb-2 text-sm"><Briefcase size={16} /> Skills</h4>
-                <div className="flex flex-wrap gap-2">
+              <div className="mt-3">
+                <h4 className="font-semibold flex gap-1.5 mb-1.5 text-[11px]"><Briefcase size={12} /> Skills</h4>
+                <div className="flex flex-wrap gap-1">
                   {profile.skills.length > 0? profile.skills.map((sk) => (
-                    <span key={sk} className="bg-gray-100 px-3 py-1 rounded-full text-xs border">{sk}</span>
-                  )) : <span className="text-xs text-gray-400">No skills</span>}
+                    <span key={sk} className="bg-gray-50 px-2 py-0.5 rounded-full text-[10px] border">{sk}</span>
+                  )) : <span className="text-[11px] text-gray-400">No skills</span>}
                 </div>
               </div>
 
-              <div className="mt-5 bg-blue-50 p-3 rounded-xl flex items-center justify-between gap-2 border border-blue-100">
-                <span className="text-sm flex items-center gap-2 truncate min-w-0"><FileText size={16} className="shrink-0" /> <span className="truncate">{profile.resumeName}</span></span>
-                <div className="flex gap-2 shrink-0">
-                  <a href={profile.resumeUrl} target="_blank" rel="noopener noreferrer" className="bg-white border px-3 py-1.5 rounded-lg text-xs flex items-center gap-1"><ExternalLink size={12} /> View</a>
-                  <a href={profile.resumeUrl} download className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs flex items-center gap-1"><Download size={12} /> DL</a>
+              <div className="mt-3 bg-blue-50/70 p-2.5 rounded-xl flex items-center justify-between gap-2 border border-blue-100">
+                <span className="text-[11px] flex items-center gap-1.5 truncate min-w-0"><FileText size={12} className="shrink-0" /> <span className="truncate">{profile.resumeName}</span></span>
+                <div className="flex gap-1.5 shrink-0">
+                  <a href={profile.resumeUrl} target="_blank" rel="noopener noreferrer" className="bg-white border px-2.5 py-1 rounded-lg text-[11px] flex items-center gap-1"><ExternalLink size={11} /> View</a>
+                  <a href={profile.resumeUrl} download className="bg-blue-600 text-white px-2.5 py-1 rounded-lg text-[11px] flex items-center gap-1"><Download size={11} /> DL</a>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="lg:col-span-7 bg-white rounded-xl border overflow-hidden lg:h-[85vh] flex flex-col">
-            <div className={`p-3 border-b flex justify-between items-center ${st.bg}`}>
-              <h2 className="font-semibold text-sm truncate max-w-[70%]">CV Preview - {job?.title || app.job?.title}</h2>
-              <span className={`text-xs capitalize px-3 py-1 rounded-full border font-bold ${st.bg} ${st.border} ${st.text}`}>{app.status}</span>
+          {/* RIGHT - CV */}
+          <div className="lg:col-span-7 bg-white sm:border sm:rounded-2xl border-y sm:border-gray-100 overflow-hidden lg:h-[82vh] flex flex-col">
+            <div className={`p-2.5 sm:p-3 border-b flex justify-between items-center ${st.bg}`}>
+              <h2 className="font-semibold text-[12px] sm:text-[13px] truncate max-w-[65%]">CV Preview - {job?.title || app.job?.title}</h2>
+              <span className={`text-[10px] capitalize px-2.5 py-1 rounded-full border font-bold ${st.bg} ${st.border} ${st.text}`}>{app.status}</span>
             </div>
 
             {profile.resumeUrl? (
               <>
+                {/* Desktop iframe */}
                 <div className="hidden sm:block flex-1">
-                  <iframe src={`${profile.resumeUrl}#toolbar=0&navpanes=0`} className="w-full h-full min-h-[650px]" title="CV" />
+                  <iframe src={`${profile.resumeUrl}#toolbar=0&navpanes=0`} className="w-full h-full min-h-[600px]" title="CV" />
                 </div>
-                <div className="sm:hidden p-4">
+                {/* Mobile small preview card */}
+                <div className="sm:hidden p-3">
                   <div className="rounded-xl border overflow-hidden bg-white">
-                    <div className="p-6 text-center bg-gray-50">
-                      <div className="w-16 h-16 mx-auto bg-blue-100 rounded-2xl flex items-center justify-center mb-3">
-                        <FileText className="text-blue-600" size={32} />
+                    <div className="p-5 text-center bg-gray-50">
+                      <div className="w-12 h-12 mx-auto bg-blue-100 rounded-xl flex items-center justify-center mb-2.5">
+                        <FileText className="text-blue-600" size={22} />
                       </div>
-                      <p className="text-sm font-semibold truncate">{profile.resumeName}</p>
-                      <p className="text-[11px] text-gray-500 mt-1">{fullName} - CV</p>
-                      <div className="flex gap-2 mt-4">
-                        <a href={profile.resumeUrl} target="_blank" rel="noopener noreferrer" className="flex-1 bg-blue-600 text-white text-xs font-medium py-2.5 rounded-xl text-center flex items-center justify-center gap-1">
-                          <ExternalLink size={14}/> Preview
+                      <p className="text-[12px] font-semibold truncate">{profile.resumeName}</p>
+                      <p className="text-[10px] text-gray-500 mt-1">{fullName} - CV</p>
+                      <div className="flex gap-2 mt-3">
+                        <a href={profile.resumeUrl} target="_blank" rel="noopener noreferrer" className="flex-1 bg-blue-600 text-white text-[11px] font-medium py-2 rounded-xl text-center flex items-center justify-center gap-1">
+                          <ExternalLink size={12} /> Preview
                         </a>
-                        <a href={profile.resumeUrl} download className="flex-1 bg-gray-900 text-white text-xs py-2.5 rounded-xl text-center flex items-center justify-center gap-1">
-                          <Download size={14}/> Download
+                        <a href={profile.resumeUrl} download className="flex-1 bg-gray-900 text-white text-[11px] py-2 rounded-xl text-center flex items-center justify-center gap-1">
+                          <Download size={12} /> Download
                         </a>
                       </div>
                     </div>
-                    <div className="p-2 bg-white border-t text-[10px] text-center text-gray-400 truncate">{profile.resumeName}</div>
                   </div>
                 </div>
               </>
             ) : (
-              <div className="flex-1 flex items-center justify-center text-sm text-gray-400 p-10">No CV uploaded</div>
+              <div className="flex-1 flex items-center justify-center text-[12px] text-gray-400 p-10">No CV uploaded</div>
             )}
           </div>
         </div>
