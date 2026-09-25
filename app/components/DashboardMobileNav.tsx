@@ -42,7 +42,7 @@ export default function DashboardMobileNav() {
     <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-gray-100 z-50">
       <div className="flex justify-around items-center h-14 px-1 pt-1 pb-[max(6px,env(safe-area-inset-bottom))]">
         {links.map((link) => {
-          const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`);
+          const isActive = pathname === link.href;
           const Icon = link.icon;
           return (
             <Link
