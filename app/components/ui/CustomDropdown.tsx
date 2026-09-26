@@ -25,13 +25,10 @@ export default function CustomDropdown({ value, onChange, options, placeholder =
     const menuWidth = variant === "pill"? 160 : r.width;
     const padding = 12;
     let left = r.left;
-
-    // ✅ Prevent right-edge cut
     if (r.left + menuWidth > window.innerWidth - padding) {
       left = window.innerWidth - menuWidth - padding;
     }
     if (left < padding) left = padding;
-
     setCoords({ top: r.bottom + 8, left, width: r.width });
   };
 
@@ -67,9 +64,9 @@ export default function CustomDropdown({ value, onChange, options, placeholder =
     <div
       ref={menuRef}
       style={{ top: coords.top, left: coords.left, minWidth: variant === "pill"? 160 : coords.width }}
-      className="fixed bg-white border border-gray-200 rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.15)] z-[9999] overflow-hidden"
+      className="fixed bg-white border border-gray-200 rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.15)] z-9999 overflow-hidden"
     >
-      <div className="max-h-60 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+      <div className="max-h-60 overflow-y-auto">
         {options.map((opt) => (
           <button
             key={opt.value}
@@ -91,10 +88,13 @@ export default function CustomDropdown({ value, onChange, options, placeholder =
             ref={btnRef}
             type="button"
             onClick={() => setOpen(!open)}
-            className={`px-3 py-1.5 sm:py-2 border rounded-full text-[12px] sm:text-[13px] font-medium flex items-center gap-1.5 whitespace-nowrap transition ${active? "bg-blue-600 text-white border-blue-600" : "bg-gray-50 border-gray-200 text-gray-700"}`}
+            className={`border rounded-full font-medium flex items-center gap-1 whitespace-nowrap transition leading-none
+              px-2.5 py-1 text-[11px] sm:px-3 sm:py-1.5 sm:text-[13px] sm:leading-normal
+              ${active? "bg-blue-600 text-white border-blue-600" : "bg-gray-50 border-gray-200 text-gray-700"}`}
           >
             {currentLabel}
-            <ChevronDown size={12} className={`shrink-0 transition-transform duration-200 ${open? "rotate-180" : ""}`} />
+            <ChevronDown size={10} className={`sm:hidden shrink-0 transition-transform duration-200 ${open? "rotate-180" : ""}`} />
+            <ChevronDown size={12} className={`hidden sm:block shrink-0 transition-transform duration-200 ${open? "rotate-180" : ""}`} />
           </button>
         </div>
         {typeof window!== "undefined" && createPortal(menu, document.body)}

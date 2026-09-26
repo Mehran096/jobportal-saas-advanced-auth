@@ -165,61 +165,66 @@ export default function JobsPage() {
           </div>
         </div>
 
-      {/* FILTERS - ONE LINE SCROLL + ACTIVE STATE */}
-<div className="bg-white border border-gray-100 rounded-xl shadow-sm mb-4 relative z-20">
-  <div className="w-full overflow-x-auto scrollbar-hide [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-    <div className="flex items-center gap-1.5 sm:gap-2 p-2 sm:p-2.5 flex-nowrap">
-      <CustomDropdown
-        variant="pill"
-        value={datePosted}
-        onChange={(v) => { setDatePosted(v); setCurrentPage(1); }}
-        placeholder="Date posted"
-        options={[
-          { label: "Date posted", value: "" },
-          { label: "Last 24h", value: "24h" },
-          { label: "Last 3d", value: "3d" },
-          { label: "Last 7d", value: "7d" },
-          { label: "Last 14d", value: "14d" },
-        ]}
-      />
-      <CustomDropdown
-        variant="pill"
-        value={jobType}
-        onChange={(v) => { setJobType(v); setCurrentPage(1); }}
-        placeholder="Job type"
-        options={[
-          { label: "Job type", value: "" },
-          { label: "Full-time", value: "Full-time" },
-          { label: "Part-time", value: "Part-time" },
-          { label: "Remote", value: "Remote" },
-          { label: "Contract", value: "Contract" },
-          { label: "Internship", value: "Internship" },
-        ]}
-      />
-      <CustomDropdown
-        variant="pill"
-        value={minSalary}
-        onChange={(v) => { setMinSalary(v); setCurrentPage(1); }}
-        placeholder="Pay (Rs.)"
-        options={[
-          { label: "Pay (Rs.)", value: "" },
-          { label: "50k+", value: "50000" },
-          { label: "100k+", value: "100000" },
-          { label: "200k+", value: "200000" },
-          { label: "500k+", value: "500000" },
-        ]}
-      />
-      {isSearching && (
+      {/* FILTERS - COMPACT MOBILE SO CLEAR IS VISIBLE */}
+<div className="bg-white border border-gray-100 rounded-xl shadow-sm mb-4 relative z-20 overflow-hidden">
+  <div className="flex items-center">
+    <div className="flex-1 overflow-x-auto scrollbar-hide [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2.5 flex-nowrap">
+        <CustomDropdown
+          variant="pill"
+          value={datePosted}
+          onChange={(v) => { setDatePosted(v); setCurrentPage(1); }}
+          placeholder="Date posted"
+          options={[
+            { label: "Date posted", value: "" },
+            { label: "Last 24h", value: "24h" },
+            { label: "Last 3d", value: "3d" },
+            { label: "Last 7d", value: "7d" },
+            { label: "Last 14d", value: "14d" },
+          ]}
+        />
+        <CustomDropdown
+          variant="pill"
+          value={jobType}
+          onChange={(v) => { setJobType(v); setCurrentPage(1); }}
+          placeholder="Job type"
+          options={[
+            { label: "Job type", value: "" },
+            { label: "Full-time", value: "Full-time" },
+            { label: "Part-time", value: "Part-time" },
+            { label: "Remote", value: "Remote" },
+            { label: "Contract", value: "Contract" },
+            { label: "Internship", value: "Internship" },
+          ]}
+        />
+        <CustomDropdown
+          variant="pill"
+          value={minSalary}
+          onChange={(v) => { setMinSalary(v); setCurrentPage(1); }}
+          placeholder="Pay (Rs.)"
+          options={[
+            { label: "Pay (Rs.)", value: "" },
+            { label: "50k+", value: "50000" },
+            { label: "100k+", value: "100000" },
+            { label: "200k+", value: "200000" },
+            { label: "500k+", value: "500000" },
+          ]}
+        />
+        {/* spacer for scroll end */}
+        <span className="block w-2 h-1 shrink-0 sm:hidden" />
+      </div>
+    </div>
+
+    {isSearching && (
+      <div className="shrink-0 bg-white pl-1.5 pr-2 sm:pl-2 sm:pr-2.5 py-1.5 sm:py-2 border-l border-gray-100 shadow-[-8px_0_12px_white] flex items-center">
         <button
           onClick={clearAll}
-          className="shrink-0 ml-1 flex items-center gap-1 px-3 py-1.5 sm:py-2 text-[12px] sm:text-[13px] text-red-600 font-semibold hover:bg-red-50 rounded-full whitespace-nowrap transition"
+          className="flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 text-[11px] sm:text-[13px] text-red-600 font-bold hover:bg-red-50 rounded-full whitespace-nowrap transition"
         >
-          <X size={12} /> Clear all
+          <X size={12} /> Clear
         </button>
-      )}
-      {/* 👇 invisible spacer so last item never cuts */}
-      <span className="block w-2 h-1 shrink-0" />
-    </div>
+      </div>
+    )}
   </div>
 </div>
 
