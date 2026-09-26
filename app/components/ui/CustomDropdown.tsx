@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect, useLayoutEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown } from "lucide-react";
 
@@ -19,7 +19,7 @@ export default function CustomDropdown({ value, onChange, options, placeholder =
   const btnRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const updatePos = () => {
+  const updatePos = useCallback(() => {
     if (!btnRef.current) return;
     const r = btnRef.current.getBoundingClientRect();
     const menuWidth = variant === "pill"? 160 : r.width;
@@ -30,11 +30,11 @@ export default function CustomDropdown({ value, onChange, options, placeholder =
     }
     if (left < padding) left = padding;
     setCoords({ top: r.bottom + 8, left, width: r.width });
-  };
+  }, [variant]);
 
   useLayoutEffect(() => {
     if (open) updatePos();
-  }, [open]);
+  }, [open, updatePos]);
 
   useEffect(() => {
     if (!open) return;
@@ -44,18 +44,17 @@ export default function CustomDropdown({ value, onChange, options, placeholder =
       if (menuRef.current?.contains(target)) return;
       setOpen(false);
     };
-    const onScroll = () => updatePos();
     document.addEventListener("mousedown", close);
     document.addEventListener("touchstart", close);
-    window.addEventListener("scroll", onScroll, true);
-    window.addEventListener("resize", onScroll);
+    window.addEventListener("scroll", updatePos, true);
+    window.addEventListener("resize", updatePos);
     return () => {
       document.removeEventListener("mousedown", close);
       document.removeEventListener("touchstart", close);
-      window.removeEventListener("scroll", onScroll, true);
-      window.removeEventListener("resize", onScroll);
+      window.removeEventListener("scroll", updatePos, true);
+      window.removeEventListener("resize", updatePos);
     };
-  }, [open]);
+  }, [open, updatePos]);
 
   const active = value!== "";
   const currentLabel = options.find((o) => o.value === value)?.label || placeholder;
@@ -71,7 +70,7 @@ export default function CustomDropdown({ value, onChange, options, placeholder =
           <button
             key={opt.value}
             onClick={() => { onChange(opt.value); setOpen(false); }}
-            className={`w-full text-left px-3 py-2.5 text-[13px] hover:bg-blue-50 active:bg-blue-100 transition ${value === opt.value? "bg-blue-50 text-blue-600 font-semibold" : "text-gray-800"}`}
+            className={`w-full text-left px-3 py-2.5 text-[13px] hover:bg-blue-50 ${value === opt.value? "bg-blue-50 text-blue-600 font-semibold" : "text-gray-800"}`}
           >
             {opt.label}
           </button>
@@ -88,9 +87,7 @@ export default function CustomDropdown({ value, onChange, options, placeholder =
             ref={btnRef}
             type="button"
             onClick={() => setOpen(!open)}
-            className={`border rounded-full font-medium flex items-center gap-1 whitespace-nowrap transition leading-none
-              px-2.5 py-1 text-[11px] sm:px-3 sm:py-1.5 sm:text-[13px] sm:leading-normal
-              ${active? "bg-blue-600 text-white border-blue-600" : "bg-gray-50 border-gray-200 text-gray-700"}`}
+            className={`border rounded-full font-medium flex items-center gap-1 whitespace-nowrap transition leading-none px-2.5 py-1 text-[11px] sm:px-3 sm:py-1.5 sm:text-[13px] sm:leading-normal ${active? "bg-blue-600 text-white border-blue-600" : "bg-gray-50 border-gray-200 text-gray-700"}`}
           >
             {currentLabel}
             <ChevronDown size={10} className={`sm:hidden shrink-0 transition-transform duration-200 ${open? "rotate-180" : ""}`} />
