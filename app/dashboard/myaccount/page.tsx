@@ -11,38 +11,27 @@ import {
 } from "@/lib/redux/api/authApi";
 import DashboardHeader from "@/app/components/DashboardHeader";
 import DashboardMobileNav from "@/app/components/DashboardMobileNav";
- 
 
 interface FormState {
   firstName: string;
   lastName: string;
   email: string;
 }
-
-interface ApiError {
-  data?: { message?: string };
-}
-
+interface ApiError { data?: { message?: string }; }
 type Provider = "credentials" | "google" | "both";
 
 function Skeleton() {
   return (
     <>
       <DashboardHeader />
-      <div className="max-w-xl mx-auto p-6 space-y-6 animate-pulse">
-        <div className="h-8 w-56 bg-gray-200 rounded-lg"></div>
-        <div className="h-4 w-40 bg-gray-100 rounded"></div>
-
-        <div className="space-y-4 border p-5 rounded-xl bg-white">
-          <div className="h-10 w-full bg-gray-200 rounded-lg"></div>
-          <div className="h-10 w-full bg-gray-200 rounded-lg"></div>
-          <div className="h-10 w-full bg-gray-200 rounded-lg"></div>
-          <div className="h-11 w-full bg-gray-300 rounded-lg"></div>
-        </div>
-
-        <div className="border border-red-200 bg-red-50 p-5 rounded-xl">
-          <div className="h-5 w-32 bg-red-200 rounded"></div>
-          <div className="h-10 w-full bg-red-200 rounded-lg mt-3"></div>
+      <div className="max-w-xl mx-auto p-3 sm:p-6 space-y-4 animate-pulse pb-20">
+        <div className="h-6 w-40 bg-gray-200 rounded-lg"></div>
+        <div className="h-3 w-28 bg-gray-100 rounded"></div>
+        <div className="space-y-3 border p-4 rounded-xl bg-white">
+          <div className="h-11 w-full bg-gray-200 rounded-xl"></div>
+          <div className="h-11 w-full bg-gray-200 rounded-xl"></div>
+          <div className="h-11 w-full bg-gray-200 rounded-xl"></div>
+          <div className="h-12 w-full bg-gray-300 rounded-xl"></div>
         </div>
       </div>
     </>
@@ -78,15 +67,12 @@ export default function MyAccountPage() {
       const payload = isGoogleLinked
        ? { firstName: form.firstName, lastName: form.lastName }
         : form;
-
       const res = await updateMyAccount(payload as FormState).unwrap();
-
       await update({
         firstName: res.user.firstName,
         lastName: res.user.lastName,
         email: res.user.email,
       });
-
       toast.success("Account updated successfully!");
     } catch (error: unknown) {
       const err = error as ApiError;
@@ -109,44 +95,60 @@ export default function MyAccountPage() {
   return (
     <>
       <DashboardHeader />
-      <div className="max-w-xl mx-auto p-3 sm:p-6 space-y-6 pb-20">
-        <h1 className="text-2xl font-bold">My Account - {data?.user.role}</h1>
-        <p className="text-sm text-gray-500">
-          {provider === "both"? "Password + Google (Linked)" : provider}
-        </p>
+      <div className="max-w-xl mx-auto px-3 sm:px-6 py-3 sm:py-6 space-y-4 sm:space-y-6 pb-24">
+        {/* Header - small on mobile */}
+        <div>
+          <h1 className="text-[16px] sm:text-xl font-bold tracking-tight flex items-center gap-2">
+            My Account
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-black text-white font-semibold capitalize">{data?.user.role}</span>
+          </h1>
+          <p className="text-[11px] sm:text-xs text-zinc-500 mt-1 capitalize">
+            {provider === "both"? "Password + Google (Linked)" : provider} account
+          </p>
+        </div>
 
-        <form onSubmit={onUpdate} className="space-y-4 border p-5 rounded-xl bg-white">
-          <input
-            placeholder="First Name"
-            value={form.firstName}
-            onChange={(e) => setForm({...form, firstName: e.target.value })}
-            className="w-full border px-3 py-2 rounded-lg"
-          />
-          <input
-            placeholder="Last Name"
-            value={form.lastName}
-            onChange={(e) => setForm({...form, lastName: e.target.value })}
-            className="w-full border px-3 py-2 rounded-lg"
-          />
-          <input
-            type="email"
-            value={form.email}
-            onChange={(e) =>!isGoogleLinked && setForm({...form, email: e.target.value })}
-            readOnly={isGoogleLinked}
-            className={`w-full border px-3 py-2 rounded-lg ${isGoogleLinked? "bg-gray-100 cursor-not-allowed" : ""}`}
-          />
-          {isGoogleLinked && (
-            <p className="text-xs text-gray-400">Email cannot be changed for Google-linked accounts</p>
-          )}
-          <button disabled={saving} className="bg-black text-white px-5 py-2 rounded-lg w-full disabled:opacity-50">
+        <form onSubmit={onUpdate} className="space-y-3 sm:space-y-4 border border-zinc-200 p-3.5 sm:p-5 rounded-2xl bg-white shadow-sm">
+          <div className="space-y-1">
+            <label className="text-[11px] sm:text-xs font-medium text-zinc-600">First Name</label>
+            <input
+              placeholder="First name"
+              value={form.firstName}
+              onChange={(e) => setForm({...form, firstName: e.target.value })}
+              className="w-full border border-zinc-300 px-3.5 py-3 sm:py-2.5 rounded-xl text-[16px] sm:text-[13px] focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-[11px] sm:text-xs font-medium text-zinc-600">Last Name</label>
+            <input
+              placeholder="Last name"
+              value={form.lastName}
+              onChange={(e) => setForm({...form, lastName: e.target.value })}
+              className="w-full border border-zinc-300 px-3.5 py-3 sm:py-2.5 rounded-xl text-[16px] sm:text-[13px] focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-[11px] sm:text-xs font-medium text-zinc-600">Email Address</label>
+            <input
+              type="email"
+              value={form.email}
+              onChange={(e) =>!isGoogleLinked && setForm({...form, email: e.target.value })}
+              readOnly={isGoogleLinked}
+              className={`w-full border border-zinc-300 px-3.5 py-3 sm:py-2.5 rounded-xl text-[16px] sm:text-[13px] focus:outline-none focus:ring-2 focus:ring-black focus:border-black ${isGoogleLinked? "bg-zinc-100 cursor-not-allowed text-zinc-500" : ""}`}
+            />
+            {isGoogleLinked && (
+              <p className="text-[10px] text-zinc-400 mt-1">Email cannot be changed for Google-linked accounts</p>
+            )}
+          </div>
+
+          <button disabled={saving} className="bg-black text-white px-5 h-11 sm:h-10.5 rounded-xl w-full text-[13px] font-semibold disabled:opacity-50 active:scale-[0.98] transition">
             {saving? "Saving..." : "Update Account"}
           </button>
         </form>
 
-        <div className="border border-red-300 bg-red-50 p-5 rounded-xl">
-          <h3 className="font-bold text-red-700">Danger Zone</h3>
-          <p className="text-xs text-red-500 mt-1">This will permanently delete your account.</p>
-          <button onClick={onDelete} disabled={deleting} className="bg-red-600 text-white px-5 py-2 rounded-lg w-full mt-2 disabled:opacity-50">
+        <div className="border border-red-200 bg-red-50/80 p-3.5 sm:p-5 rounded-2xl">
+          <h3 className="font-bold text-red-700 text-[13px] sm:text-sm">Danger Zone</h3>
+          <p className="text-[11px] sm:text-xs text-red-500/80 mt-1">This will permanently delete your account and all data.</p>
+          <button onClick={onDelete} disabled={deleting} className="bg-red-600 hover:bg-red-700 text-white px-5 h-11 sm:h-10.5 rounded-xl w-full mt-3 text-[13px] font-semibold disabled:opacity-50 active:scale-[0.98] transition">
             {deleting? "Deleting..." : "Delete My Account"}
           </button>
         </div>
