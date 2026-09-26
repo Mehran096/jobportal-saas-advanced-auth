@@ -108,7 +108,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {open && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
           <div className="flex-1 bg-black/60" onClick={() => setOpen(false)} />
-          <div className="w-[260px] bg-black text-white p-4 flex flex-col justify-between">
+          <div className="w-65 bg-black text-white p-4 flex flex-col justify-between">
             <SidebarInner pathname={pathname} onClose={() => setOpen(false)} onLogout={handleLogout} loggingOut={loggingOut} appealsCount={appealsCount} reportsCount={reportsCount} />
           </div>
         </div>
