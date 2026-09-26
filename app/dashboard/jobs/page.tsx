@@ -167,7 +167,7 @@ export default function JobsPage() {
 
        {/* FILTERS - ONE LINE SCROLL + ACTIVE STATE */}
       <div className="bg-white border border-gray-100 rounded-xl shadow-sm mb-4">
-        <div className="w-full overflow-x-auto scrollbar-hide scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <div className="w-full overflow-x-auto scrollbar-hide pr-3 scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           <div className="flex items-center gap-1.5 sm:gap-2 p-2 sm:p-2.5 flex-nowrap w-max">
             <CustomDropdown
               variant="pill"
