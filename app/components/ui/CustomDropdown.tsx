@@ -56,7 +56,7 @@ export default function CustomDropdown({ value, onChange, options, placeholder =
     <div
       id={`dd-${value}-${placeholder}`}
       style={{ top: coords.top, left: coords.left, minWidth: variant === "pill"? 150 : coords.width }}
-      className="fixed bg-white border border-gray-200 rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.15)] z-[9999] overflow-hidden animate-in fade-in slide-in-from-top-1"
+      className="fixed border border-gray-20 bg-white/95 backdrop-blur-sm rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.15)] z-9999 overflow-hidden animate-in fade-in slide-in-from-top-1"
     >
       <div className="max-h-60 overflow-y-auto">
         {options.map((opt) => (
