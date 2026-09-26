@@ -19,6 +19,7 @@ import {
 import { Briefcase, MapPin, Bookmark, BookmarkCheck, Search, Users, X, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import DashboardMobileNav from "@/app/components/DashboardMobileNav";
+import CustomDropdown from "@/app/components/ui/CustomDropdown";
 
 const JobSkeleton = () => (
   <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 animate-pulse">
@@ -164,40 +165,61 @@ export default function JobsPage() {
           </div>
         </div>
 
-        {/* FILTERS - ONE LINE SCROLL + ACTIVE STATE */}
-        <div className="bg-white border border-gray-100 rounded-xl shadow-sm mb-4">
-          <div className="w-full overflow-x-auto scrollbar-hide">
-            <div className="flex items-center gap-1.5 sm:gap-2 p-2 sm:p-2.5 flex-nowrap">
-              <select value={datePosted} disabled={isFetching} onChange={(e) => { setDatePosted(e.target.value); setCurrentPage(1) }} className={`shrink-0 px-3 py-1.5 sm:py-2 border rounded-full text-[12px] sm:text-[13px] font-medium focus:outline-none transition ${datePosted? "bg-blue-600 text-white border-blue-600" : "bg-gray-50 border-gray-200 text-gray-700"} ${isFetching? "opacity-60" : ""}`}>
-                <option value="">Date posted</option>
-                <option value="24h">Last 24h</option>
-                <option value="3d">Last 3d</option>
-                <option value="7d">Last 7d</option>
-                <option value="14d">Last 14d</option>
-              </select>
-              <select value={jobType} disabled={isFetching} onChange={(e) => { setJobType(e.target.value); setCurrentPage(1) }} className={`shrink-0 px-3 py-1.5 sm:py-2 border rounded-full text-[12px] sm:text-[13px] font-medium focus:outline-none transition ${jobType? "bg-blue-600 text-white border-blue-600" : "bg-gray-50 border-gray-200 text-gray-700"} ${isFetching? "opacity-60" : ""}`}>
-                <option value="">Job type</option>
-                <option value="Full-time">Full-time</option>
-                <option value="Part-time">Part-time</option>
-                <option value="Remote">Remote</option>
-                <option value="Contract">Contract</option>
-                <option value="Internship">Internship</option>
-              </select>
-              <select value={minSalary} disabled={isFetching} onChange={(e) => { setMinSalary(e.target.value); setCurrentPage(1) }} className={`shrink-0 px-3 py-1.5 sm:py-2 border rounded-full text-[12px] sm:text-[13px] font-medium focus:outline-none transition ${minSalary? "bg-blue-600 text-white border-blue-600" : "bg-gray-50 border-gray-200 text-gray-700"} ${isFetching? "opacity-60" : ""}`}>
-                <option value="">Pay (Rs.)</option>
-                <option value="50000">50k+</option>
-                <option value="100000">100k+</option>
-                <option value="200000">200k+</option>
-                <option value="500000">500k+</option>
-              </select>
-              {isSearching && (
-                <button onClick={clearAll} className="shrink-0 ml-1 flex items-center gap-1 px-3 py-1.5 text-[12px] sm:text-[13px] text-red-600 font-semibold hover:bg-red-50 rounded-full whitespace-nowrap transition">
-                  <X size={12} /> Clear all
-                </button>
-              )}
-            </div>
+       {/* FILTERS - ONE LINE SCROLL + ACTIVE STATE */}
+      <div className="bg-white border border-gray-100 rounded-xl shadow-sm mb-4">
+        <div className="w-full overflow-x-auto scrollbar-hide scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex items-center gap-1.5 sm:gap-2 p-2 sm:p-2.5 flex-nowrap w-max">
+            <CustomDropdown
+              variant="pill"
+              value={datePosted}
+              onChange={(v) => { setDatePosted(v); setCurrentPage(1); }}
+              placeholder="Date posted"
+              options={[
+                { label: "Date posted", value: "" },
+                { label: "Last 24h", value: "24h" },
+                { label: "Last 3d", value: "3d" },
+                { label: "Last 7d", value: "7d" },
+                { label: "Last 14d", value: "14d" },
+              ]}
+            />
+            <CustomDropdown
+              variant="pill"
+              value={jobType}
+              onChange={(v) => { setJobType(v); setCurrentPage(1); }}
+              placeholder="Job type"
+              options={[
+                { label: "Job type", value: "" },
+                { label: "Full-time", value: "Full-time" },
+                { label: "Part-time", value: "Part-time" },
+                { label: "Remote", value: "Remote" },
+                { label: "Contract", value: "Contract" },
+                { label: "Internship", value: "Internship" },
+              ]}
+            />
+            <CustomDropdown
+              variant="pill"
+              value={minSalary}
+              onChange={(v) => { setMinSalary(v); setCurrentPage(1); }}
+              placeholder="Pay (Rs.)"
+              options={[
+                { label: "Pay (Rs.)", value: "" },
+                { label: "50k+", value: "50000" },
+                { label: "100k+", value: "100000" },
+                { label: "200k+", value: "200000" },
+                { label: "500k+", value: "500000" },
+              ]}
+            />
+            {isSearching && (
+              <button
+                onClick={clearAll}
+                className="shrink-0 ml-1 flex items-center gap-1 px-3 py-1.5 sm:py-2 text-[12px] sm:text-[13px] text-red-600 font-semibold hover:bg-red-50 rounded-full whitespace-nowrap transition"
+              >
+                <X size={12} /> Clear all
+              </button>
+            )}
           </div>
         </div>
+      </div>
 
         {displayJobs.length === 0 &&!isFetching? (
           <div className="text-center py-14 bg-white rounded-xl shadow-sm border">
