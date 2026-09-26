@@ -46,8 +46,8 @@ export default function RegisterPage() {
   const isGoogleError = error.toLowerCase().includes("google");
 
   return (
-    <div className="min-h-[100dvh] bg-linear-to-br from-blue-600 to-indigo-700 flex items-center justify-center p-3 sm:p-4">
-      <div className="w-full max-w-[360px] sm:max-w-md">
+    <div className="min-h-dvh bg-linear-to-br from-blue-600 to-indigo-700 flex items-center justify-center p-3 sm:p-4">
+      <div className="w-full max-w-90 sm:max-w-md">
         {/* Header - compact */}
         <div className="text-center mb-3 sm:mb-5">
           <div className="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-xl sm:rounded-2xl mb-2 sm:mb-3 shadow">

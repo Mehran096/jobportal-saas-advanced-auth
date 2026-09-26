@@ -98,6 +98,19 @@ export const authOptions: AuthOptions = {
           typedUser.name = `${newUser.firstName} ${newUser.lastName}`.trim()
           typedUser.email = newUser.email
         } else {
+          // If user exists, don't block login - just log them in with their real role
+            // The warning is already shown on the register page, no need to block here
+            if (desiredRole && existing.role !== desiredRole) {
+              // Clear the wrong cookie server-side
+              try {
+                const cookieStore = await cookies()
+                cookieStore.set("desired_role", "", { path: "/", maxAge: 0 })
+              } catch {}
+              // DON'T throw - let them login as their original role
+              // If you WANT to still block and show error page, keep throw but
+              // make sure auth/error clears cookie (my previous fix)
+            }
+
           if (existing.isBanned) throw new Error("BANNED")
           if (existing.provider === "credentials") {
             existing.provider = "both"

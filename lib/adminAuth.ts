@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import User from "@/models/User";
+import { Types } from "mongoose";
 
 type UserRole = "jobseeker" | "employer" | "admin";
 
@@ -10,6 +11,12 @@ interface SessionUser {
   id: string;
   role: UserRole;
   email?: string;
+}
+
+interface LeanAdmin {
+  _id: Types.ObjectId;
+  role: UserRole;
+  isBanned?: boolean;
 }
 
 export async function verifyAdmin() {
@@ -26,7 +33,10 @@ export async function verifyAdmin() {
   }
 
   await dbConnect();
-  const dbUser = await User.findById(user.id).select("role isBanned").lean();
+  
+  const dbUser = await User.findById(user.id)
+    .select("role isBanned")
+    .lean<LeanAdmin>();
 
   if (!dbUser) {
     throw new Error("Unauthorized: User not found");
@@ -40,9 +50,8 @@ export async function verifyAdmin() {
     throw new Error("Unauthorized: Not admin");
   }
 
-  // DB is source of truth, session role is just hint
-  return { 
-    id: dbUser._id.toString(), 
-    role: dbUser.role as UserRole 
+  return {
+    id: dbUser._id.toString(),
+    role: dbUser.role,
   };
 }
