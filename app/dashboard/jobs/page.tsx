@@ -168,7 +168,7 @@ export default function JobsPage() {
       {/* FILTERS - COMPACT MOBILE SO CLEAR IS VISIBLE */}
 <div className="bg-white border border-gray-100 rounded-xl shadow-sm mb-4 relative z-20 overflow-hidden">
   <div className="flex items-center">
-    <div className="flex-1 overflow-x-auto scrollbar-hide [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+    <div className="flex-1 overflow-x-auto scrollbar-hide scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
       <div className="flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2.5 flex-nowrap">
         <CustomDropdown
           variant="pill"
