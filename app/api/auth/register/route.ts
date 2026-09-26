@@ -3,13 +3,28 @@ import dbConnect from "@/lib/db";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
 
+type UserRole = "jobseeker" | "employer";
+const VALID_ROLES: UserRole[] = ["jobseeker", "employer"];
+
+function isValidRole(role: unknown): role is UserRole {
+  return typeof role === "string" && (VALID_ROLES as string[]).includes(role);
+}
+
+interface RegisterBody {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  password?: string;
+  role?: unknown;
+}
+
 export async function POST(req: Request) {
   try {
     await dbConnect();
-    const { firstName, lastName, email, password, role } = await req.json();
+    const body = (await req.json()) as RegisterBody;
+    const { firstName, lastName, email, password, role } = body;
 
-    // Validation
-    if (!firstName || !lastName || !email || !password) {
+    if (!firstName?.trim() || !lastName?.trim() || !email?.trim() || !password) {
       return NextResponse.json({ message: "All fields are required" }, { status: 400 });
     }
 
@@ -17,22 +32,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Password must be at least 6 characters" }, { status: 400 });
     }
 
-    // Normalize email + validate role
     const normalizedEmail = email.toLowerCase().trim();
-    const validRoles = ["jobseeker", "employer"];
-    const userRole = validRoles.includes(role) ? role : "jobseeker";
+    const userRole: UserRole = isValidRole(role) ? role : "jobseeker";
 
-    // Check if user already exists (case-insensitive)
     const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
-      // ===== FIX FOR YOUR SCREENSHOT: mehranh91309@gmail.com =====
-      if (existingUser.provider === "google") {
+      if (existingUser.provider === "google" || existingUser.provider === "both") {
         return NextResponse.json(
           { message: "This email already uses Google login. Please Continue with Google." },
           { status: 409 }
         );
       }
-      // ============================================================
       return NextResponse.json({ message: "User already exists with this email" }, { status: 409 });
     }
 
@@ -48,23 +58,21 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(
-      { 
-        message: "User created successfully", 
-        user: { 
-          id: newUser._id, 
+      {
+        message: "User created successfully",
+        user: {
+          id: newUser._id,
           firstName: newUser.firstName,
           lastName: newUser.lastName,
-          name: newUser.name,
           email: newUser.email,
-          role: newUser.role
-        } 
+          role: newUser.role,
+        },
       },
       { status: 201 }
     );
-
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Server error";
-    console.error("Register Error:", error);
+    console.error("Register Error:", message);
     return NextResponse.json({ message }, { status: 500 });
   }
 }
