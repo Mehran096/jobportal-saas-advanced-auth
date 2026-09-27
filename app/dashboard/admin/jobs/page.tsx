@@ -37,11 +37,11 @@ export default function AdminJobsPage() {
     <div>
       <h1 className="text-xl font-bold">Manage Jobs</h1>
       <div className="flex gap-2 mt-4">
-        <input placeholder="Search title / company / location..." value={search} onChange={(e) => setSearch(e.target.value)} className="border rounded-xl px-4 py-2 text-sm w-[300px]" />
+        <input placeholder="Search title / company / location..." value={search} onChange={(e) => setSearch(e.target.value)} className="border rounded-xl px-4 py-2 text-sm w-75" />
       </div>
 
       <div className={`bg-white border rounded-2xl mt-4 overflow-x-auto transition ${showLoader? "opacity-60" : ""}`}>
-        <table className="w-full text-sm min-w-[600px]">
+        <table className="w-full text-sm min-w-150">
           <thead className="bg-gray-50 text-xs text-gray-500"><tr><th className="p-3 text-left">Title</th><th className="p-3 text-left">Company</th><th className="p-3 text-left">Posted By</th><th className="p-3">Action</th></tr></thead>
           <tbody>
             {isLoading? <tr><td colSpan={4} className="p-6 text-center">Loading...</td></tr> :
