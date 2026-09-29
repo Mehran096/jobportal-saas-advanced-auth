@@ -15,6 +15,7 @@ const menu = [
   { href: "/dashboard/admin/jobs", label: "Jobs", icon: Briefcase },
   { href: "/dashboard/admin/reports", label: "Reports", icon: AlertTriangle, badgeKey: "reports" },
   { href: "/dashboard/admin/appeals", label: "Appeals", icon: Flag, badgeKey: "appeals" },
+  { href: "/dashboard/admin/blogs", label: "Blogs", icon: Briefcase },
 ];
 
 interface SessionUser { role?: string }
