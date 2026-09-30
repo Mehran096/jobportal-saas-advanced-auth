@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
@@ -32,7 +33,15 @@ export async function GET(req: NextRequest) {
       .limit(20)
       .lean();
 
-    return NextResponse.json({ success: true, blogs });
+    return NextResponse.json(
+      { success: true, blogs },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'Pragma': 'no-cache',
+        },
+      }
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json({ success: false, error: message }, { status: 500 });
