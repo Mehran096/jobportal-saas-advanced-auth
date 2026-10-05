@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Users, Briefcase, Shield, LogOut, Menu, X, Flag, AlertTriangle } from "lucide-react";
+import { LayoutDashboard, Users, Briefcase, Shield, LogOut, Menu, X, Flag, AlertTriangle, FileText } from "lucide-react";
 import { useGetAppealsQuery } from "@/lib/redux/api/adminApi";
 import { useGetReportsQuery } from "@/lib/redux/api/reportApi";
 
@@ -15,7 +15,7 @@ const menu = [
   { href: "/dashboard/admin/jobs", label: "Jobs", icon: Briefcase },
   { href: "/dashboard/admin/reports", label: "Reports", icon: AlertTriangle, badgeKey: "reports" },
   { href: "/dashboard/admin/appeals", label: "Appeals", icon: Flag, badgeKey: "appeals" },
-  { href: "/dashboard/admin/blogs", label: "Blogs", icon: Briefcase },
+  { href: "/dashboard/admin/blogs", label: "Blogs", icon: FileText },
 ];
 
 interface SessionUser { role?: string }
