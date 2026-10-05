@@ -1,17 +1,14 @@
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-export const fetchCache = 'force-no-store';
+export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import Blog from "@/models/Blog";
 
-// No any, No FilterQuery import needed
 type SearchClause = {
   title?: { $regex: string; $options: string };
   excerpt?: { $regex: string; $options: string };
   tags?: { $regex: string; $options: string };
-  category?: { $regex: string; $options: string };
 };
 
 type BlogFilter = {
@@ -27,8 +24,8 @@ export async function GET(req: NextRequest) {
     
     const category = searchParams.get("category");
     const search = searchParams.get("search")?.trim();
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
+    const limit = Math.min(20, Math.max(1, parseInt(searchParams.get("limit") || "9")));
     const skip = (page - 1) * limit;
 
     const filter: BlogFilter = { status: "published" };
@@ -42,7 +39,6 @@ export async function GET(req: NextRequest) {
         { title: { $regex: search, $options: "i" } },
         { excerpt: { $regex: search, $options: "i" } },
         { tags: { $regex: search, $options: "i" } },
-        { category: { $regex: search, $options: "i" } },
       ];
     }
 
@@ -62,18 +58,11 @@ export async function GET(req: NextRequest) {
       { 
         success: true, 
         blogs,
-        pagination: {
-          total,
-          totalPages,
-          currentPage: page,
-          hasNext: page < totalPages,
-          hasPrev: page > 1
-        }
+        pagination: { total, totalPages, currentPage: page, hasNext: page < totalPages, hasPrev: page > 1 }
       },
       {
         headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-          'Pragma': 'no-cache',
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
         },
       }
     );
@@ -83,48 +72,32 @@ export async function GET(req: NextRequest) {
   }
 }
 
+// POST - same as yours
 export async function POST(req: NextRequest) {
   try {
     await dbConnect();
     const body = await req.json() as {
-      title: string;
-      excerpt: string;
-      content: string;
-      slug?: string;
-      coverImage?: string;
-      author: string;
-      category?: string;
-      tags?: string[];
-      metaTitle?: string;
-      metaDescription?: string;
-      metaKeywords?: string[];
-      ogImage?: string;
+      title: string; excerpt: string; content: string; slug?: string;
+      coverImage?: string; author: string; category?: string;
+      tags?: string[]; metaTitle?: string; metaDescription?: string;
+      metaKeywords?: string[]; ogImage?: string;
     };
 
-    let slug = body.slug;
-    if (!slug && body.title) {
-      slug = body.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "-" + Date.now().toString().slice(-4);
-    }
-
-    const metaTitle = body.metaTitle || body.title?.substring(0, 60);
-    const metaDescription = body.metaDescription || body.excerpt?.substring(0, 160);
-
+    let slug = body.slug || body.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "-" + Date.now().toString().slice(-4);
     const existing = await Blog.findOne({ slug });
-    if (existing) {
-      slug = `${slug}-${Math.floor(Math.random() * 1000)}`;
-    }
+    if (existing) slug = `${slug}-${Math.floor(Math.random() * 1000)}`;
 
     const newBlog = await Blog.create({
       title: body.title,
-      slug: slug,
+      slug,
       excerpt: body.excerpt,
       content: body.content,
       coverImage: body.coverImage || "",
       author: body.author,
       category: body.category || "Career Guide",
       tags: body.tags || [],
-      metaTitle,
-      metaDescription,
+      metaTitle: body.metaTitle || body.title?.substring(0, 60),
+      metaDescription: body.metaDescription || body.excerpt?.substring(0, 160),
       metaKeywords: body.metaKeywords || body.tags || [],
       ogImage: body.ogImage || body.coverImage || "",
       status: "published"

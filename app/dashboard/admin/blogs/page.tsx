@@ -60,7 +60,7 @@ export default function AdminBlogsPage() {
           <p className="text-sm text-gray-500">{isSearching? "Searching..." : `${total} blogs total`}</p>
         </div>
         <div className="flex gap-2 w-full md:w-auto relative">
-          <div className="relative flex-1 md:w-[300px]">
+          <div className="relative flex-1 md:w-75">
             <input
               type="text"
               placeholder="Search title, category, tags..."

@@ -4,7 +4,7 @@ import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolk
 
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: '/api',
-  credentials: 'include',
+  credentials: 'include', // Cookies for all routes - public + protected both ok
 });
 
 const baseQueryWithReauth: BaseQueryFn<
@@ -13,16 +13,12 @@ const baseQueryWithReauth: BaseQueryFn<
   FetchBaseQueryError
 > = async (args, api, extraOptions) => {
   const result = await rawBaseQuery(args, api, extraOptions);
-
-  // just return, don't dispatch here to avoid circular dep + any
-  // 401 handling will be done in DashboardHeader logout
   return result;
 };
 
 export const baseApi = createApi({
   reducerPath: 'baseApi',
   baseQuery: baseQueryWithReauth,
-  keepUnusedDataFor: 0,
   tagTypes: ["Jobs", "Applications", "Notifications", "JobSeeker", "Employer", "Auth", "Profile", "SavedJobs", "Admin", "Report", "Blog"],
   endpoints: () => ({}),
 });

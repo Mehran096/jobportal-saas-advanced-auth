@@ -79,7 +79,7 @@ export default function DashboardHeader() {
                     {isSaved && <Bookmark size={16} />}
                     {link.label}
                     {isSaved && savedCount > 0 && (
-                      <span className="bg-blue-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center leading-none">
+                      <span className="bg-blue-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full min-w-5 text-center leading-none">
                         {savedCount}
                       </span>
                     )}

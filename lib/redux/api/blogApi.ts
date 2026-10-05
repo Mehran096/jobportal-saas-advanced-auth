@@ -7,12 +7,7 @@ export interface Blog {
   excerpt: string;
   content: string;
   coverImage: string;
-  author: {
-    _id: string;
-    name: string;
-    image?: string;
-    email?: string;
-  };
+  author: { _id: string; name: string; image?: string; email?: string; };
   category: string;
   tags: string[];
   metaTitle: string;
@@ -22,90 +17,62 @@ export interface Blog {
   updatedAt: string;
 }
 
-interface Pagination {
-  total: number;
-  totalPages: number;
-  currentPage: number;
-  hasNext: boolean;
-  hasPrev: boolean;
-}
+interface Pagination { total: number; totalPages: number; currentPage: number; hasNext: boolean; hasPrev: boolean; }
+interface BlogsResponse { success: boolean; blogs: Blog[]; pagination: Pagination; }
+interface BlogResponse { success: boolean; blog: Blog; }
+interface BlogParams { category?: string; search?: string; page?: number; limit?: number; }
 
-interface BlogsResponse {
-  success: boolean;
-  blogs: Blog[];
-  pagination: Pagination;
-}
-
-interface BlogResponse {
-  success: boolean;
-  blog: Blog;
-}
-
-interface BlogParams {
+interface CreateBlogPayload {
+  title: string;
+  excerpt: string;
+  content: string;
+  coverImage?: string;
   category?: string;
-  search?: string;
-  page?: number;
-  limit?: number;
+  tags?: string[];
+  author: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  metaKeywords?: string[];
+  ogImage?: string;
 }
 
 export const blogApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    // GET all blogs with search + pagination + category
     getBlogs: builder.query<BlogsResponse, BlogParams | void>({
       query: (params) => {
         const searchParams = new URLSearchParams();
-        if (params?.category) searchParams.append("category", params.category);
+        if (params?.category && params.category !== "All") searchParams.append("category", params.category);
         if (params?.search) searchParams.append("search", params.search);
         if (params?.page) searchParams.append("page", params.page.toString());
         if (params?.limit) searchParams.append("limit", params.limit.toString());
-        
-        const queryString = searchParams.toString();
-        return `/blogs${queryString ? `?${queryString}` : ""}`;
+        const qs = searchParams.toString();
+        return `/blogs${qs ? `?${qs}` : ""}`;
       },
       providesTags: ["Blog"],
+      keepUnusedDataFor: 60,
     }),
 
-    // GET single blog by slug
     getBlogBySlug: builder.query<BlogResponse, string>({
       query: (slug) => `/blogs/${slug}`,
       providesTags: (result, error, slug) => [{ type: "Blog", id: slug }],
+      keepUnusedDataFor: 300,
     }),
 
-    // POST create blog (admin)
-    createBlog: builder.mutation<BlogResponse, { title: string; excerpt: string; content: string; coverImage?: string; category?: string; tags?: string[]; author: string }>({
-      query: (body) => ({
-        url: "/blogs",
-        method: "POST",
-        body,
-      }),
+    createBlog: builder.mutation<BlogResponse, CreateBlogPayload>({
+      query: (body) => ({ url: "/blogs", method: "POST", body }),
       invalidatesTags: ["Blog"],
     }),
 
-    // PUT update blog
     updateBlog: builder.mutation<BlogResponse, { slug: string; data: Partial<Blog> }>({
-      query: ({ slug, data }) => ({
-        url: `/blogs/${slug}`,
-        method: "PUT",
-        body: data,
-      }),
+      query: ({ slug, data }) => ({ url: `/blogs/${slug}`, method: "PUT", body: data }),
       invalidatesTags: (result, error, { slug }) => [{ type: "Blog", id: slug }, "Blog"],
     }),
 
-    // DELETE blog
     deleteBlog: builder.mutation<{ success: boolean; message: string }, string>({
-      query: (slug) => ({
-        url: `/blogs/${slug}`,
-        method: "DELETE",
-      }),
+      query: (slug) => ({ url: `/blogs/${slug}`, method: "DELETE" }),
       invalidatesTags: ["Blog"],
     }),
   }),
 });
 
-export const {
-  useGetBlogsQuery,
-  useGetBlogBySlugQuery,
-  useCreateBlogMutation,
-  useUpdateBlogMutation,
-  useDeleteBlogMutation,
-} = blogApi;
+export const { useGetBlogsQuery, useGetBlogBySlugQuery, useCreateBlogMutation, useUpdateBlogMutation, useDeleteBlogMutation } = blogApi;

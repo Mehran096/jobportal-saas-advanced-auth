@@ -4,6 +4,17 @@ import { useGetBlogBySlugQuery } from "@/lib/redux/api/blogApi";
 import Link from "next/link";
 import Image from "next/image";
 
+function isValidImageSrc(src: string | undefined | null): boolean {
+  if (!src) return false;
+  if (src.length < 6) return false; // your error is "f" - 1 char
+  return (
+    src.startsWith("http://") ||
+    src.startsWith("https://") ||
+    src.startsWith("/") ||
+    src.startsWith("data:image")
+  );
+}
+
 export default function AdminBlogViewPage() {
   const params = useParams();
   const slug = params.slug as string;
@@ -15,10 +26,10 @@ export default function AdminBlogViewPage() {
   if (isError || !data?.blog) return <div className="p-10 text-center text-red-500">Blog not found</div>;
 
   const blog = data.blog;
+  const hasValidImage = isValidImageSrc(blog.coverImage);
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6">
-      {/* HEADER */}
       <div className="flex justify-between items-center mb-4 md:mb-6">
         <button onClick={() => router.back()} className="px-3 md:px-4 py-2 border rounded-lg text-sm bg-white hover:bg-gray-50">
           ← Back
@@ -28,20 +39,26 @@ export default function AdminBlogViewPage() {
         </Link>
       </div>
 
-      {/* COVER IMAGE - Fixed with next/image */}
-      {blog.coverImage && (
-        <div className="relative w-full h-55 md:h-100 mb-4 md:mb-6">
+      {/* COVER - now safe */}
+      <div className="relative w-full h-55 md:h-100 mb-4 md:mb-6 bg-gray-100 rounded-xl overflow-hidden">
+        {hasValidImage ? (
           <Image
             src={blog.coverImage}
             alt={blog.title}
             fill
-            className="object-cover rounded-xl"
+            className="object-cover"
             sizes="(max-width: 768px) 100vw, 900px"
+            priority
           />
-        </div>
-      )}
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
+            <span className="text-4xl mb-2">🖼️</span>
+            <span className="text-sm">No valid cover image</span>
+            {blog.coverImage && <span className="text-[10px] mt-1">DB value: {blog.coverImage}</span>}
+          </div>
+        )}
+      </div>
 
-      {/* META */}
       <div className="flex flex-wrap gap-2 mb-3 md:mb-4">
         <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs md:text-sm">{blog.category}</span>
         <span className="px-3 py-1 bg-gray-100 rounded-full text-xs md:text-sm">👁️ {blog.views} views</span>
@@ -61,10 +78,7 @@ export default function AdminBlogViewPage() {
 
       <div className="bg-white rounded-xl p-4 md:p-6 border shadow-sm">
         <div
-          className="prose prose-sm md:prose-lg max-w-none 
-          prose-h2:text-xl md:prose-h2:text-2xl prose-h2:font-bold 
-          prose-p:leading-7 prose-p:text-gray-700
-          prose-img:rounded-xl prose-img:w-full"
+          className="prose prose-sm md:prose-lg max-w-none prose-h2:text-xl md:prose-h2:text-2xl prose-h2:font-bold prose-p:leading-7 prose-p:text-gray-700 prose-img:rounded-xl prose-img:w-full"
           dangerouslySetInnerHTML={{ __html: blog.content }}
         />
       </div>
