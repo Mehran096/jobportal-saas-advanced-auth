@@ -6,35 +6,70 @@ import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import Blog from "@/models/Blog";
 
-interface BlogQuery {
+// No any, No FilterQuery import needed
+type SearchClause = {
+  title?: { $regex: string; $options: string };
+  excerpt?: { $regex: string; $options: string };
+  tags?: { $regex: string; $options: string };
+  category?: { $regex: string; $options: string };
+};
+
+type BlogFilter = {
   status?: string;
   category?: string;
-  $text?: { $search: string };
-}
+  $or?: SearchClause[];
+};
 
 export async function GET(req: NextRequest) {
   try {
     await dbConnect();
     const { searchParams } = new URL(req.url);
-    const category = searchParams.get("category");
-    const search = searchParams.get("search");
     
-    const filter: BlogQuery = { status: "published" };
-    if (category) {
+    const category = searchParams.get("category");
+    const search = searchParams.get("search")?.trim();
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const skip = (page - 1) * limit;
+
+    const filter: BlogFilter = { status: "published" };
+    
+    if (category && category !== "All") {
       filter.category = category;
     }
+    
     if (search) {
-      filter.$text = { $search: search };
+      filter.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { excerpt: { $regex: search, $options: "i" } },
+        { tags: { $regex: search, $options: "i" } },
+        { category: { $regex: search, $options: "i" } },
+      ];
     }
 
-    const blogs = await Blog.find(filter)
-      .populate("author", "name email image")
-      .sort({ createdAt: -1 })
-      .limit(20)
-      .lean();
+    const [blogs, total] = await Promise.all([
+      Blog.find(filter)
+        .populate("author", "name email image")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Blog.countDocuments(filter)
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
 
     return NextResponse.json(
-      { success: true, blogs },
+      { 
+        success: true, 
+        blogs,
+        pagination: {
+          total,
+          totalPages,
+          currentPage: page,
+          hasNext: page < totalPages,
+          hasPrev: page > 1
+        }
+      },
       {
         headers: {
           'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',

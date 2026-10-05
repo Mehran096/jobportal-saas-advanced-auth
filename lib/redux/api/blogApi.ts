@@ -22,9 +22,18 @@ export interface Blog {
   updatedAt: string;
 }
 
+interface Pagination {
+  total: number;
+  totalPages: number;
+  currentPage: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
 interface BlogsResponse {
   success: boolean;
   blogs: Blog[];
+  pagination: Pagination;
 }
 
 interface BlogResponse {
@@ -35,16 +44,21 @@ interface BlogResponse {
 interface BlogParams {
   category?: string;
   search?: string;
+  page?: number;
+  limit?: number;
 }
 
 export const blogApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    // GET all blogs
+    // GET all blogs with search + pagination + category
     getBlogs: builder.query<BlogsResponse, BlogParams | void>({
       query: (params) => {
         const searchParams = new URLSearchParams();
         if (params?.category) searchParams.append("category", params.category);
         if (params?.search) searchParams.append("search", params.search);
+        if (params?.page) searchParams.append("page", params.page.toString());
+        if (params?.limit) searchParams.append("limit", params.limit.toString());
+        
         const queryString = searchParams.toString();
         return `/blogs${queryString ? `?${queryString}` : ""}`;
       },
