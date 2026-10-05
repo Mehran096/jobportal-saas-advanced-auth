@@ -6,19 +6,19 @@ import { useGetBlogsInfiniteQuery } from "@/lib/redux/api/blogApi";
 
 const CATEGORIES = ["All", "Career Guide", "Interview Tips", "Freelancing", "Tech News"];
 
-function isValidImageSrc(src: string | undefined) {
+function isValidImageSrc(src: string | undefined): boolean {
   if (!src || src.length < 6) return false;
   return src.startsWith("http://") || src.startsWith("https://") || src.startsWith("/") || src.startsWith("data:image");
 }
 
 export default function BlogListPage() {
-  const [searchInput, setSearchInput] = useState("");
-  const [category, setCategory] = useState("All");
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [searchInput, setSearchInput] = useState<string>("");
+  const [category, setCategory] = useState<string>("All");
+  const [page, setPage] = useState<number>(1);
+  const [search, setSearch] = useState<string>("");
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleSearch = (val: string) => {
+  const handleSearch = (val: string): void => {
     setSearchInput(val);
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
@@ -27,7 +27,14 @@ export default function BlogListPage() {
     }, 400);
   };
 
-  const handleCategoryChange = (cat: string) => {
+  const handleClearSearch = (): void => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setSearchInput("");
+    setSearch("");
+    setPage(1);
+  };
+
+  const handleCategoryChange = (cat: string): void => {
     setCategory(cat);
     setPage(1);
   };
@@ -48,8 +55,25 @@ export default function BlogListPage() {
 
       <div className="mb-6 space-y-4">
         <div className="relative max-w-md">
-          <input type="text" placeholder="Search guides, tips, freelancing..." value={searchInput} onChange={(e) => handleSearch(e.target.value)} className="w-full px-4 py-2.5 pr-10 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-black bg-white" />
-          <span className="absolute right-3.5 top-2.5 text-gray-400">🔍</span>
+          <input
+            type="text"
+            placeholder="Search guides, tips, freelancing..."
+            value={searchInput}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="w-full px-4 py-2.5 pr-20 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-black bg-white"
+          />
+          <div className="absolute right-3 top-2.5 flex items-center gap-2">
+          {searchInput && (
+            <button
+              onClick={handleClearSearch}
+              className="w-6 h-6 flex items-center justify-center rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 transition"
+              aria-label="Clear search"
+            >
+              <span className="text-[14px] font-bold leading-none">✕</span>
+            </button>
+          )}
+          <span className="text-gray-400">🔍</span>
+        </div>
         </div>
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           {CATEGORIES.map((cat) => (
